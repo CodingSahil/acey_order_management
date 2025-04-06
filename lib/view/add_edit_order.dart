@@ -24,15 +24,16 @@ class AddEditOrderView extends StatefulWidget {
 class _AddEditOrderViewState extends State<AddEditOrderView> {
   final DashboardController dashboardController = DashboardController();
   late TextEditingController dateOfDeliveryController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
+  DateTime? selectedDate;
   List<OrderModel> orderList = [];
   List<ProductModel> productList = [];
+  bool isError = false;
 
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await dashboardController.getProductList();
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(Duration(milliseconds: 400));
       await productBottomSheet(
         context: context,
         dashboardController: dashboardController,
@@ -55,6 +56,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
         title: widget.addEditEnum == AddEditEnum.Edit ? 'Edit Order' : 'Add Order',
         isDone: productList.isNotEmpty && orderList.isNotEmpty,
         onDone: () async {
+          if (selectedDate == null) {
+            setState(() {
+              isError = true;
+            });
+            return;
+          }
           if (orderList.isNotEmpty && orderList.any((element) => element.quantity == null || element.quantity == 0)) {
             errorSnackBar(context: context, title: "Some Product's might missing Quantity");
             return;
@@ -107,19 +114,20 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                       GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () async {
-                          selectedDate =
-                              await showDatePicker(
-                                context: context,
-                                firstDate: DateTime.now().subtract(Duration(days: 5)),
-                                lastDate: DateTime(DateTime.now().year + 5),
-                                initialDate: selectedDate,
-                                currentDate: selectedDate,
-                              ) ??
-                              DateTime.now();
+                          selectedDate = await showDatePicker(
+                            context: context,
+                            firstDate: DateTime.now().subtract(Duration(days: 5)),
+                            lastDate: DateTime(DateTime.now().year + 5),
+                            initialDate: selectedDate,
+                            currentDate: selectedDate,
+                          );
 
-                          setState(() {
-                            dateOfDeliveryController.text = DateFormat('dd-MM-yyyy').format(selectedDate);
-                          });
+                          if (selectedDate != null) {
+                            setState(() {
+                              isError = false;
+                              dateOfDeliveryController.text = DateFormat('dd-MM-yyyy').format(selectedDate!);
+                            });
+                          }
                         },
                         child: Container(
                           margin: EdgeInsets.only(top: 16, bottom: 8),
@@ -130,7 +138,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                               Padding(padding: EdgeInsets.only(left: 4), child: Text('Select Date of Delivery', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14))),
                               SizedBox(height: 8),
                               DecoratedBox(
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(width: 0.5, color: Colors.black.withAlpha((255 * 0.5).toInt()))),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(width: 0.5, color: isError ? Colors.red : Colors.black.withAlpha((255 * 0.5).toInt())),
+                                ),
                                 child: LabeledTextFormField(
                                   controller: dateOfDeliveryController,
                                   hintText: 'Date of Delivery',
@@ -219,6 +230,8 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                                     errorMessage:
                                                                         isError && quantityController.text.isNotEmpty && int.parse(quantityController.text) < product.moq
                                                                             ? 'Quantity should be greater than ${product.moq}'
+                                                                            : quantityController.text.isEmpty
+                                                                            ? 'Quantity should filled'
                                                                             : null,
                                                                     textInputType: TextInputType.number,
                                                                     onChanged: (value) {
@@ -303,10 +316,20 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                                     errorMessage:
                                                                         isError && quantityController.text.isNotEmpty && int.parse(quantityController.text) < product.moq
                                                                             ? 'Quantity should be greater than ${product.moq}'
+                                                                            : quantityController.text.isEmpty
+                                                                            ? 'Quantity should filled'
+                                                                            : quantityController.text.isNotEmpty
+                                                                            ? ''
                                                                             : null,
                                                                     textInputType: TextInputType.number,
                                                                     onChanged: (value) {
-                                                                      setElevatedButtonState(() {});
+                                                                      setElevatedButtonState(() {
+                                                                        if (quantityController.text.isNotEmpty || int.parse(quantityController.text) >= product.moq) {
+                                                                          isError = false;
+                                                                        } else {
+                                                                          isError = true;
+                                                                        }
+                                                                      });
                                                                     },
                                                                     onFieldSubmitted: (value) {
                                                                       setElevatedButtonState(() {});
@@ -385,7 +408,16 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
 }
 
 class HorizontalTitleValueComponent extends StatelessWidget {
-  const HorizontalTitleValueComponent({super.key, required this.title, required this.value, this.titleFontSize, this.valueFontSize, this.titleFontWeight, this.valueFontWeight});
+  const HorizontalTitleValueComponent({
+    super.key,
+    this.isValueExpanded = false,
+    required this.title,
+    required this.value,
+    this.titleFontSize,
+    this.valueFontSize,
+    this.titleFontWeight,
+    this.valueFontWeight,
+  });
 
   final String title;
   final String value;
@@ -393,14 +425,17 @@ class HorizontalTitleValueComponent extends StatelessWidget {
   final double? valueFontSize;
   final FontWeight? titleFontWeight;
   final FontWeight? valueFontWeight;
+  final bool isValueExpanded;
 
   @override
   Widget build(BuildContext context) {
+    Widget valueWidget = Text(value.toString(), style: TextStyle(fontSize: valueFontSize ?? 12, color: Colors.black, fontWeight: valueFontWeight), maxLines: 2);
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('$title : ', style: TextStyle(fontSize: titleFontSize ?? 12, color: Colors.black.withAlpha((255 * 0.6).toInt()), fontWeight: titleFontWeight)),
-        Text(value.toString(), style: TextStyle(fontSize: valueFontSize ?? 12, color: Colors.black, fontWeight: valueFontWeight)),
+        isValueExpanded ? Expanded(child: valueWidget) : valueWidget,
       ],
     );
   }

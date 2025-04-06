@@ -23,7 +23,10 @@ Future<void> productBottomSheet({
   await showModalBottomSheet(
     context: context,
     backgroundColor: Colors.white,
+    enableDrag: selectedProductListLocal.isNotEmpty,
+    isDismissible: selectedProductListLocal.isNotEmpty,
     scrollControlDisabledMaxHeightRatio: 0.9,
+    sheetAnimationStyle: AnimationStyle(curve: Curves.easeIn, duration: Duration(milliseconds: 600), reverseCurve: Curves.easeIn, reverseDuration: Duration(milliseconds: 400)),
     showDragHandle: true,
     builder:
         (context) => StatefulBuilder(
@@ -79,64 +82,80 @@ Future<void> productBottomSheet({
                                     ? dashboardController.productList.getRange(0, 15)
                                     : dashboardController.productList)
                                 .map(
-                                  (product) => Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [BoxShadow(color: Colors.black.withAlpha((255 * 0.2).toInt()), spreadRadius: 2, blurRadius: 0.25, offset: Offset(0, 0))],
-                                    ),
-                                    margin: EdgeInsets.only(left: 18, right: 18, top: 25),
-                                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                Text('Series Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                Text(product.srNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
-                                              ],
-                                            ),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                Text('AEPL Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                Text(product.aeplPartNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
-                                              ],
-                                            ),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                Text('Reference Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                Text(product.referencePartNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
-                                              ],
-                                            ),
-                                          ],
+                                  (product) => GestureDetector(
+                                    behavior: HitTestBehavior.translucent,
+                                    onTap: () {
+                                      setBottomSheetState(() {
+                                        if (selectedProductListLocal.any((element) => element.id == product.id)) {
+                                          selectedProductListLocal.remove(product);
+                                        } else {
+                                          selectedProductListLocal.add(product);
+                                          log('message');
+                                        }
+                                      });
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(
+                                          color: selectedProductListLocal.any((element) => element.id == product.id) ? Colors.blueAccent : Colors.black.withAlpha((255 * 0.2).toInt()),
+                                          width: 1,
                                         ),
-                                        StatefulBuilder(
-                                          builder:
-                                              (context, setCheckBoxState) => Checkbox(
-                                                activeColor: Colors.blueAccent,
-                                                materialTapTargetSize: MaterialTapTargetSize.padded,
-                                                value: selectedProductListLocal.any((element) => element.aeplPartNumber == product.aeplPartNumber),
-                                                onChanged: (value) {
-                                                  setCheckBoxState(() {
-                                                    if (value != null && value == true) {
-                                                      selectedProductListLocal.add(product);
-                                                    } else if (value != null && value == false) {
-                                                      selectedProductListLocal.remove(product);
-                                                    } else {
-                                                      log('message');
-                                                    }
-                                                  });
-                                                  setBottomSheetState(() {});
-                                                },
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      margin: EdgeInsets.only(left: 18, right: 18, top: 25),
+                                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                children: [
+                                                  Text('Series Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+                                                  Text(product.srNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
+                                                ],
                                               ),
-                                        ),
-                                      ],
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                children: [
+                                                  Text('AEPL Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+                                                  Text(product.aeplPartNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                children: [
+                                                  Text('Reference Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+                                                  Text(product.referencePartNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          StatefulBuilder(
+                                            builder:
+                                                (context, setCheckBoxState) => Checkbox(
+                                                  activeColor: Colors.blueAccent,
+                                                  materialTapTargetSize: MaterialTapTargetSize.padded,
+                                                  value: selectedProductListLocal.any((element) => element.aeplPartNumber == product.aeplPartNumber),
+                                                  onChanged: (value) {
+                                                    setCheckBoxState(() {
+                                                      if (value != null && value == true) {
+                                                        selectedProductListLocal.add(product);
+                                                      } else if (value != null && value == false) {
+                                                        selectedProductListLocal.remove(product);
+                                                      } else {
+                                                        log('message');
+                                                      }
+                                                    });
+                                                    setBottomSheetState(() {});
+                                                  },
+                                                ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 )
@@ -301,7 +320,7 @@ Future<void> selectDiscountAndPackingType({required BuildContext context, requir
                           behavior: HitTestBehavior.translucent,
                           onTap: () {
                             Get.back();
-                            Get.to(() => OrderPreviewAfterAddView(discount: selectDiscount, orderList: orderList));
+                            Get.to(() => OrderPreviewAfterAddView(discount: selectDiscount, selectedPackingType: selectedPackingType, orderList: orderList));
                           },
                           child: Container(
                             width: MediaQuery.sizeOf(context).width,

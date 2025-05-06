@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/model/product_model.dart';
@@ -9,7 +11,9 @@ import 'package:acey_order_management/utils/label_text_fields.dart';
 import 'package:acey_order_management/utils/loader.dart';
 import 'package:acey_order_management/utils/products_bottomsheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class AddEditOrderView extends StatefulWidget {
@@ -23,11 +27,13 @@ class AddEditOrderView extends StatefulWidget {
 
 class _AddEditOrderViewState extends State<AddEditOrderView> {
   final DashboardController dashboardController = DashboardController();
+  late TextEditingController partyNameController = TextEditingController();
   late TextEditingController dateOfDeliveryController = TextEditingController();
   DateTime? selectedDate;
   List<OrderModel> orderList = [];
   List<ProductModel> productList = [];
   bool isError = false;
+  List<TextEditingController> quantityListController = [];
 
   @override
   void initState() {
@@ -41,6 +47,8 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
         onSubmit: (productListInner) {
           productList = productListInner;
           orderList = productList.map((product) => OrderModel(productModel: product)).toList();
+          quantityListController = List.generate(orderList.length, (index) => TextEditingController(text: orderList[index].quantity?.toString() ?? '10'));
+          orderList = orderList.map((e) => OrderModel(productModel: e.productModel, quantity: e.quantity != null ? e.quantity! : 10)).toList();
           setState(() {});
         },
       );
@@ -56,6 +64,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
         title: widget.addEditEnum == AddEditEnum.Edit ? 'Edit Order' : 'Add Order',
         isDone: productList.isNotEmpty && orderList.isNotEmpty,
         onDone: () async {
+          if (partyNameController.text.isEmpty) {
+            setState(() {
+              isError = true;
+            });
+            return;
+          }
           if (selectedDate == null) {
             setState(() {
               isError = true;
@@ -63,11 +77,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
             return;
           }
           if (orderList.isNotEmpty && orderList.any((element) => element.quantity == null || element.quantity == 0)) {
+            log('orderList => ${orderList.map((e) => e.quantity)}');
             errorSnackBar(context: context, title: "Some Product's might missing Quantity");
             return;
           }
           if (productList.isNotEmpty && orderList.isNotEmpty) {
-            await selectDiscountAndPackingType(context: context, orderList: orderList);
+            await selectDiscountAndPackingType(context: context, orderList: orderList, partyName: partyNameController.text, dateOfDelivery: dateOfDeliveryController.text);
           }
         },
       ),
@@ -95,6 +110,8 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
 
                       productList = productListTemp;
                       orderList = orderListTemp;
+                      quantityListController = List.generate(orderList.length, (index) => TextEditingController(text: orderList[index].quantity?.toString() ?? '10'));
+                      orderList = orderList.map((e) => OrderModel(productModel: e.productModel, quantity: e.quantity != null ? e.quantity! : 10)).toList();
                       setState(() {});
                     },
                   );
@@ -111,6 +128,19 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                   padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
                   child: Column(
                     children: [
+                      Container(
+                        margin: EdgeInsets.only(top: 16, bottom: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(padding: EdgeInsets.only(left: 4), child: Text('Enter Party Name', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14))),
+                            SizedBox(height: 8),
+                            LabeledTextFormField(controller: partyNameController, hintText: 'Enter Party Name', isError: isError && partyNameController.text.isEmpty),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 5),
                       GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () async {
@@ -135,7 +165,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Padding(padding: EdgeInsets.only(left: 4), child: Text('Select Date of Delivery', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14))),
+                              Padding(padding: EdgeInsets.only(left: 4), child: Text('Select Order Date', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14))),
                               SizedBox(height: 8),
                               DecoratedBox(
                                 decoration: BoxDecoration(
@@ -144,7 +174,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                 ),
                                 child: LabeledTextFormField(
                                   controller: dateOfDeliveryController,
-                                  hintText: 'Date of Delivery',
+                                  hintText: 'Order Date',
                                   enable: false,
                                   suffix: Icon(Icons.calendar_month_rounded, size: 20, color: Colors.black.withAlpha((255 * 0.5).toInt())),
                                 ),
@@ -194,203 +224,102 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                               ),
                                             ],
                                           ),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  HorizontalTitleValueComponent(title: 'SR Number', value: product.srNumber, valueFontSize: 14, valueFontWeight: FontWeight.w600),
-                                                  SizedBox(height: 2),
-                                                  HorizontalTitleValueComponent(title: 'Reference Number', value: product.referencePartNumber, valueFontSize: 14, valueFontWeight: FontWeight.w600),
-                                                ],
-                                              ),
-                                              if (orderList[index].quantity != null && orderList[index].quantity! > 0)
-                                                GestureDetector(
-                                                  behavior: HitTestBehavior.translucent,
-                                                  onTap: () async {
-                                                    await showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        bool isError = false;
-                                                        TextEditingController quantityController = TextEditingController();
-                                                        return StatefulBuilder(
-                                                          builder:
-                                                              (context, setElevatedButtonState) => AlertDialog(
-                                                                backgroundColor: Colors.white,
-                                                                alignment: Alignment.center,
-                                                                title: Text('Add ${product.aeplPartNumber} Quantity', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
-                                                                content: SizedBox(
-                                                                  width: MediaQuery.sizeOf(context).width,
-                                                                  child: LabeledTextFormField(
-                                                                    controller: quantityController,
-                                                                    hintText: 'Enter ${product.aeplPartNumber} Quantity',
-                                                                    isError: isError,
-                                                                    errorMessage:
-                                                                        isError && quantityController.text.isNotEmpty && int.parse(quantityController.text) < product.moq
-                                                                            ? 'Quantity should be greater than ${product.moq}'
-                                                                            : quantityController.text.isEmpty
-                                                                            ? 'Quantity should filled'
-                                                                            : null,
-                                                                    textInputType: TextInputType.number,
-                                                                    onChanged: (value) {
-                                                                      setElevatedButtonState(() {});
-                                                                    },
-                                                                    onFieldSubmitted: (value) {
-                                                                      setElevatedButtonState(() {});
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                                actions: [
-                                                                  TextButton(
-                                                                    onPressed: () {
-                                                                      quantityController.clear();
-                                                                      Navigator.of(context).pop();
-                                                                    },
-                                                                    style: ButtonStyle(),
-                                                                    child: Text("Cancel", style: TextStyle(color: Colors.black)),
-                                                                  ),
-                                                                  ElevatedButton(
-                                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-                                                                    onPressed: () async {
-                                                                      if (quantityController.text.isEmpty || int.parse(quantityController.text) < product.moq) {
-                                                                        isError = true;
-                                                                        await Future.delayed(Duration(milliseconds: 200));
-                                                                        setElevatedButtonState(() {});
-                                                                        return;
-                                                                      } else {
-                                                                        setElevatedButtonState(() {
-                                                                          isError = false;
-                                                                        });
-                                                                        setState(() {
-                                                                          orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityController.text));
-                                                                        });
-                                                                        Navigator.of(context).pop();
-                                                                      }
-                                                                    },
-                                                                    child: Text("Confirm", style: TextStyle(color: Colors.white)),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(border: Border.all(color: Colors.black.withAlpha((255 * 0.5).toInt()), width: 1), borderRadius: BorderRadius.circular(6)),
-                                                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Icon(Icons.edit, color: Colors.black.withAlpha((255 * 0.5).toInt()), size: 12),
-                                                        SizedBox(width: 2),
-                                                        Text('Edit Qty', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black.withAlpha((255 * 0.5).toInt()))),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                )
-                                              else
-                                                GestureDetector(
-                                                  behavior: HitTestBehavior.translucent,
-                                                  onTap: () async {
-                                                    await showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        bool isError = false;
-                                                        TextEditingController quantityController = TextEditingController();
-
-                                                        return StatefulBuilder(
-                                                          builder:
-                                                              (context, setElevatedButtonState) => AlertDialog(
-                                                                backgroundColor: Colors.white,
-                                                                alignment: Alignment.center,
-                                                                title: Text('Add ${product.aeplPartNumber} Quantity', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
-                                                                content: SizedBox(
-                                                                  width: MediaQuery.sizeOf(context).width,
-                                                                  child: LabeledTextFormField(
-                                                                    controller: quantityController,
-                                                                    hintText: 'Enter ${product.aeplPartNumber} Quantity',
-                                                                    isError: isError,
-                                                                    errorMessage:
-                                                                        isError && quantityController.text.isNotEmpty && int.parse(quantityController.text) < product.moq
-                                                                            ? 'Quantity should be greater than ${product.moq}'
-                                                                            : quantityController.text.isEmpty
-                                                                            ? 'Quantity should filled'
-                                                                            : quantityController.text.isNotEmpty
-                                                                            ? ''
-                                                                            : null,
-                                                                    textInputType: TextInputType.number,
-                                                                    onChanged: (value) {
-                                                                      setElevatedButtonState(() {
-                                                                        if (quantityController.text.isNotEmpty || int.parse(quantityController.text) >= product.moq) {
-                                                                          isError = false;
-                                                                        } else {
-                                                                          isError = true;
-                                                                        }
-                                                                      });
-                                                                    },
-                                                                    onFieldSubmitted: (value) {
-                                                                      setElevatedButtonState(() {});
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                                actions: [
-                                                                  TextButton(
-                                                                    onPressed: () {
-                                                                      quantityController.clear();
-                                                                      Navigator.of(context).pop();
-                                                                    },
-                                                                    style: ButtonStyle(),
-                                                                    child: Text("Cancel", style: TextStyle(color: Colors.black)),
-                                                                  ),
-                                                                  ElevatedButton(
-                                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-                                                                    onPressed: () async {
-                                                                      if (quantityController.text.isEmpty || int.parse(quantityController.text) < product.moq) {
-                                                                        isError = true;
-                                                                        await Future.delayed(Duration(milliseconds: 200));
-                                                                        setElevatedButtonState(() {});
-                                                                        return;
-                                                                      } else {
-                                                                        setElevatedButtonState(() {
-                                                                          isError = false;
-                                                                        });
-                                                                        setState(() {
-                                                                          orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityController.text));
-                                                                        });
-                                                                        Navigator.of(context).pop();
-                                                                      }
-                                                                    },
-                                                                    child: Text("Confirm", style: TextStyle(color: Colors.white)),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(color: Colors.black.withAlpha((255 * 0.5).toInt()), borderRadius: BorderRadius.circular(6)),
-                                                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        Icon(Icons.edit, color: Colors.white, size: 12),
-                                                        SizedBox(width: 2),
-                                                        Text('Add Qty', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
+                                          HorizontalTitleValueComponent(
+                                            title: 'Reference Number',
+                                            isValueExpanded: true,
+                                            value: product.referencePartNumber,
+                                            valueFontSize: 14,
+                                            valueFontWeight: FontWeight.w600,
                                           ),
-                                          if (orderList[index].quantity != null && orderList[index].quantity! > 0) ...[
-                                            HorizontalTitleValueComponent(title: 'Qty.', value: orderList[index].quantity!.toString(), valueFontSize: 14, valueFontWeight: FontWeight.w600),
-                                            SizedBox(height: 2),
-                                          ],
+                                          SizedBox(height: 2),
+
+                                          HorizontalTitleValueComponent(title: 'Description', isValueExpanded: true, value: product.description, valueFontSize: 14, valueFontWeight: FontWeight.w600),
+                                          SizedBox(height: 12),
+
+                                          Container(
+                                            decoration: BoxDecoration(border: Border.all(color: Colors.black.withAlpha((255 * 0.5).toInt()), width: 1), borderRadius: BorderRadius.circular(6)),
+                                            padding: EdgeInsets.symmetric(horizontal: 12),
+                                            width: MediaQuery.sizeOf(context).width * 0.4,
+                                            height: 35,
+                                            child: StatefulBuilder(
+                                              builder:
+                                                  (context, setQuantityState) => Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    children: [
+                                                      GestureDetector(
+                                                        behavior: HitTestBehavior.translucent,
+                                                        onTap: () {
+                                                          if (quantityListController[index].text.isNotEmpty && int.parse(quantityListController[index].text) > product.moq) {
+                                                            setQuantityState(() {
+                                                              quantityListController[index].text = (int.parse(quantityListController[index].text) - 1).toString();
+                                                              orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
+                                                            });
+                                                          }
+                                                        },
+                                                        child: Container(
+                                                          alignment: Alignment.center,
+                                                          padding: EdgeInsets.zero,
+                                                          margin: EdgeInsets.symmetric(vertical: 5),
+                                                          height: 2,
+                                                          width: 8,
+                                                          decoration: BoxDecoration(color: Colors.black.withAlpha((255 * 0.5).toInt()), borderRadius: BorderRadius.circular(6)),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: MediaQuery.sizeOf(context).width * 0.2,
+                                                        height: 35,
+                                                        child: TextFormField(
+                                                          controller: quantityListController[index],
+                                                          cursorColor: Colors.black,
+                                                          cursorWidth: 1,
+                                                          textAlign: TextAlign.center,
+                                                          onChanged: (value) {
+                                                            setQuantityState(() {
+                                                              isError =
+                                                                  (quantityListController[index].text.isNotEmpty && int.parse(quantityListController[index].text) <= product.moq) ||
+                                                                  quantityListController[index].text.isEmpty;
+
+                                                              if (quantityListController[index].text.isNotEmpty && int.parse(quantityListController[index].text) > product.moq) {
+                                                                orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
+                                                              }
+                                                            });
+                                                          },
+                                                          textAlignVertical: TextAlignVertical.center,
+                                                          textInputAction: TextInputAction.done,
+                                                          style: GoogleFonts.rubik(fontWeight: FontWeight.normal, fontSize: 15, color: Colors.black),
+                                                          inputFormatters: <TextInputFormatter>[LengthLimitingTextInputFormatter(8), FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                                                          keyboardType: TextInputType.number,
+                                                          decoration: InputDecoration(
+                                                            constraints: BoxConstraints(maxWidth: 60, maxHeight: 30),
+                                                            contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                                                            floatingLabelBehavior: FloatingLabelBehavior.auto,
+                                                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.transparent, width: 2)),
+                                                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.transparent, width: 2)),
+                                                            disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                                                            errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
+                                                            focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      GestureDetector(
+                                                        behavior: HitTestBehavior.translucent,
+                                                        onTap: () {
+                                                          setQuantityState(() {
+                                                            quantityListController[index].text = (int.parse(quantityListController[index].text) + 1).toString();
+                                                            orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
+                                                          });
+                                                        },
+                                                        child: Icon(Icons.add, color: Colors.black, size: 14),
+                                                      ),
+                                                    ],
+                                                  ),
+                                            ),
+                                          ),
+                                          // if (orderList[index].quantity != null && orderList[index].quantity! > 0) ...[
+                                          //   HorizontalTitleValueComponent(title: 'Qty.', value: orderList[index].quantity!.toString(), valueFontSize: 14, valueFontWeight: FontWeight.w600),
+                                          //   SizedBox(height: 2),
+                                          // ],
                                         ],
                                       ),
                                     );
@@ -429,7 +358,7 @@ class HorizontalTitleValueComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget valueWidget = Text(value.toString(), style: TextStyle(fontSize: valueFontSize ?? 12, color: Colors.black, fontWeight: valueFontWeight), maxLines: 2);
+    Widget valueWidget = Text(value.toString(), style: TextStyle(fontSize: valueFontSize ?? 12, color: Colors.black, fontWeight: valueFontWeight), maxLines: 5);
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,

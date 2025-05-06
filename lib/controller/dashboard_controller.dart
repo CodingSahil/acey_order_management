@@ -1,8 +1,9 @@
 import 'dart:developer';
 
 import 'package:acey_order_management/model/product_model.dart';
+import 'package:acey_order_management/utils/supabase/supabase_methods.dart';
+import 'package:acey_order_management/utils/supabase/supabase_table_name.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardController {
   DashboardController();
@@ -10,11 +11,10 @@ class DashboardController {
   RxBool loader = false.obs;
   List<ProductModel> productList = [];
 
-  Future<void> getProductList({bool isLoaderRequire = false}) async{
+  Future<void> getProductList({bool isLoaderRequire = false}) async {
     loader(true);
 
-    final future = await Supabase.instance.client.from('products').select();
-    productList = future.map((e) => ProductModel.fromJson(e),).toList();
+    productList = await SupabaseMethods.getFromList<ProductModel>(tableKey: SupabaseTableKeys.products, fromJson: ProductModel.fromJson);
     log('productList.length => ${productList.length}');
 
     loader(false);

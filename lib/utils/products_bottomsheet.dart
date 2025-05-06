@@ -4,6 +4,7 @@ import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/main.dart';
 import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/model/product_model.dart';
+import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/order_preview_after_add.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -94,6 +95,59 @@ Future<void> productBottomSheet({
                                         }
                                       });
                                     },
+                                    onLongPress: () async {
+                                      await showDialog(
+                                        context: context,
+                                        builder:
+                                            (context) => AlertDialog(
+                                              alignment: Alignment.center,
+                                              backgroundColor: Colors.white,
+                                              title: Text('Product Details', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                                              content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                spacing: 15,
+                                                children: [
+                                                  HorizontalTitleValueComponent(
+                                                    title: 'AEPL Part Number',
+                                                    value: product.aeplPartNumber,
+                                                    titleFontWeight: FontWeight.w600,
+                                                    valueFontWeight: FontWeight.w700,
+                                                    valueFontSize: 14,
+                                                    titleFontSize: 14,
+                                                    isValueExpanded: true,
+                                                  ),
+                                                  HorizontalTitleValueComponent(
+                                                    title: 'Reference Part Number',
+                                                    value: product.referencePartNumber,
+                                                    titleFontWeight: FontWeight.w600,
+                                                    valueFontWeight: FontWeight.w700,
+                                                    valueFontSize: 14,
+                                                    titleFontSize: 14,
+                                                    isValueExpanded: true,
+                                                  ),
+                                                  HorizontalTitleValueComponent(
+                                                    title: 'Description',
+                                                    value: product.description,
+                                                    titleFontWeight: FontWeight.w600,
+                                                    valueFontWeight: FontWeight.w700,
+                                                    valueFontSize: 14,
+                                                    titleFontSize: 14,
+                                                    isValueExpanded: true,
+                                                  ),
+                                                  HorizontalTitleValueComponent(
+                                                    title: 'MRP',
+                                                    value: product.mrp.toString(),
+                                                    titleFontWeight: FontWeight.w600,
+                                                    valueFontWeight: FontWeight.w700,
+                                                    valueFontSize: 14,
+                                                    titleFontSize: 14,
+                                                  ),
+                                                ],
+                                              ),
+                                              actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: Colors.black)))],
+                                            ),
+                                      );
+                                    },
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: Colors.white,
@@ -108,31 +162,35 @@ Future<void> productBottomSheet({
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.start,
-                                                children: [
-                                                  Text('Series Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                  Text(product.srNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.start,
-                                                children: [
-                                                  Text('AEPL Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                  Text(product.aeplPartNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.start,
-                                                children: [
-                                                  Text('Reference Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                  Text(product.referencePartNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
-                                                ],
-                                              ),
-                                            ],
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                  children: [
+                                                    Text('Series Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+                                                    Text(product.srNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text('AEPL Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+                                                    Expanded(child: Text(product.aeplPartNumber, maxLines: 4, style: TextStyle(fontSize: 12, color: Colors.black))),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.start,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text('Reference Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+                                                    Expanded(child: Text(product.referencePartNumber, maxLines: 4, style: TextStyle(fontSize: 12, color: Colors.black))),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                           StatefulBuilder(
                                             builder:
@@ -193,7 +251,7 @@ Future<void> productBottomSheet({
   );
 }
 
-Future<void> selectDiscountAndPackingType({required BuildContext context, required List<OrderModel> orderList}) async {
+Future<void> selectDiscountAndPackingType({required BuildContext context, required List<OrderModel> orderList, required String partyName, required String dateOfDelivery}) async {
   int selectDiscount = 57;
   PackingType selectedPackingType = PackingType.RegularPacking;
   await showModalBottomSheet(
@@ -320,7 +378,15 @@ Future<void> selectDiscountAndPackingType({required BuildContext context, requir
                           behavior: HitTestBehavior.translucent,
                           onTap: () {
                             Get.back();
-                            Get.to(() => OrderPreviewAfterAddView(discount: selectDiscount, selectedPackingType: selectedPackingType, orderList: orderList));
+                            Get.to(
+                              () => OrderPreviewAfterAddView(
+                                discount: selectDiscount,
+                                selectedPackingType: selectedPackingType,
+                                orderList: orderList,
+                                partyName: partyName,
+                                dateOfDelivery: dateOfDelivery,
+                              ),
+                            );
                           },
                           child: Container(
                             width: MediaQuery.sizeOf(context).width,

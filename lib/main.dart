@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:acey_order_management/binding/store_binding.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
 import 'package:acey_order_management/view/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,7 @@ void main() async {
   log(getStorage.getKeys().toString(), name: 'getKeys');
   var data = getStorage.read<String>(StorageKeys.userDetails);
   await Future.delayed(Duration(milliseconds: 500));
-  log('${data != null}' , name: 'data != null');
+  log('${data != null}', name: 'data != null');
   await Future.delayed(Duration(seconds: 1));
   runApp(const MyApp());
 }
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
       designSize: const Size(720, 1520),
       builder: (context, child) {
         SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-        return GetMaterialApp(debugShowCheckedModeBanner: false, title: 'ACEY App', home: SplashScreenView());
+        return GetMaterialApp(debugShowCheckedModeBanner: false, title: 'ACEY App', initialBinding: StoreBinding(), home: SplashScreenView());
       },
     );
   }

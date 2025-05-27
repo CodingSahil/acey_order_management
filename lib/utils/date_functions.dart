@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+num getNewID(List<num> listOfID) {
+  listOfID.sort((a, b) => a.compareTo(b));
+  return listOfID.last + 1;
+}
+
 class DateFormatter {
   static final DateFormat timeStampFormat = DateFormat("yyyy-MM-dd HH:mm:ssZ");
   static final DateFormat dateFormat = DateFormat("yyyy-MM-dd");

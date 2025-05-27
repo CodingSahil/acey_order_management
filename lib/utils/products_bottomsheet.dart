@@ -5,7 +5,7 @@ import 'package:acey_order_management/main.dart';
 import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/model/product_model.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
-import 'package:acey_order_management/view/order_preview_after_add.dart';
+import 'package:acey_order_management/view/order_preview_after_add_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

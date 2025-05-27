@@ -17,3 +17,18 @@ String convertEnumToString(UserType userType) {
   }
   return UserType.None.toString().split(".").last.toLowerCase();
 }
+
+PackingType convertStringToPackingType(String packingType) {
+  return PackingType.values.firstWhereOrNull((element) {
+        return element.toString() == packingType.replaceAll(" ", "");
+      }) ??
+      PackingType.RegularPacking;
+}
+
+String convertPackingTypeToString(PackingType packingType) {
+  if (PackingType.values.any((element) => element == packingType)) {
+    String packingTypeString = packingType.toString().trim();
+    return packingTypeString;
+  }
+  return '';
+}

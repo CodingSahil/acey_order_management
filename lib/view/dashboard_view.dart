@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:developer';
-
+import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/main.dart';
+import 'package:acey_order_management/model/order_model.dart';
+import 'package:acey_order_management/model/user_model.dart';
 import 'package:acey_order_management/utils/app_bar.dart';
+import 'package:acey_order_management/utils/app_colors.dart';
+import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/enum.dart';
 import 'package:acey_order_management/utils/loader.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
@@ -12,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -21,101 +26,198 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  UserDetails? userDetails;
+  UserModel? userModel;
   late final GetStorage getStorage;
+  late final DashboardController dashboardController;
   RxBool logoutLoader = false.obs;
 
   @override
   void initState() {
+    super.initState();
     getStorage = GetStorage();
+    dashboardController = Get.find<DashboardController>();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       var data = await getStorage.read(StorageKeys.userDetails);
-      userDetails = UserDetails.fromJson(jsonDecode(data.toString()));
+      userModel = UserModel.fromJson(jsonDecode(data.toString()));
+      if (userModel != null) {
+        await dashboardController.getOrderList(userID: userModel!.id);
+      }
     });
-    log('message => ${GetStorage().read(StorageKeys.userDetails)}');
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonAppBar(title: 'Dashboard'),
-      drawer: Drawer(
+    return Obx(
+      () => Scaffold(
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 30.w,
-            right: 30.w,
-            top: MediaQuery.sizeOf(context).height * 0.04 + (isIOS ? MediaQuery.sizeOf(context).height * 0.035 : 0),
-            bottom: MediaQuery.sizeOf(context).height * 0.02 + (isIOS ? MediaQuery.sizeOf(context).height * 0.01 : 0),
-          ),
-          child: StatefulBuilder(
-            builder: (context, setDrawerState) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 18.h),
-                  if (userDetails != null)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(userDetails!.email, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
-                        SizedBox(height: 18.h),
-                        Divider(color: Colors.black.withAlpha((255 * 0.4).toInt()), height: 1, thickness: 0.5),
-                        SizedBox(height: 18.h),
-                        SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
-                      ],
-                    ),
-                  Spacer(),
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: () async {
-                      logoutLoader(true);
-                      GetStorage().erase();
-                      await Future.delayed(const Duration(seconds: 1));
-                      logoutLoader(false);
-                      Get.offAll(() => LoginView());
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(15.r)),
-                      width: MediaQuery.sizeOf(context).width * 0.65,
-                      height: MediaQuery.sizeOf(context).height * 0.05,
-                      margin: EdgeInsets.symmetric(horizontal: 24.w),
-                      padding: EdgeInsets.zero,
-                      child: Obx(
-                        () =>
-                            logoutLoader.value
-                                ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
-                                : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('Log Out', style: TextStyle(fontSize: 16, color: Colors.white,fontWeight: FontWeight.w600)), SizedBox(width: 16.w), Icon(Icons.logout, color: Colors.white, size: 40.h)],
-                                ),
+        appBar: commonAppBar(title: 'Dashboard'),
+        floatingActionButton:
+            dashboardController.orderDetailsList.isNotEmpty
+                ? FloatingActionButton.extended(
+                  onPressed: () {
+                    Get.to(() => AddEditOrderView(addEditEnum: AddEditEnum.Add));
+                  },
+                  backgroundColor: Colors.blueAccent,
+                  icon: Icon(Icons.add, color: Colors.white),
+                  label: Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                )
+                : SizedBox.shrink(),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 30.w,
+              right: 30.w,
+              top: MediaQuery.sizeOf(context).height * 0.04 + (isIOS ? MediaQuery.sizeOf(context).height * 0.035 : 0),
+              bottom: MediaQuery.sizeOf(context).height * 0.02 + (isIOS ? MediaQuery.sizeOf(context).height * 0.01 : 0),
+            ),
+            child: StatefulBuilder(
+              builder: (context, setDrawerState) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 18.h),
+                    if (userModel != null)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(userModel!.email, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
+                          SizedBox(height: 18.h),
+                          Divider(color: Colors.black.withAlpha((255 * 0.4).toInt()), height: 1, thickness: 0.5),
+                          SizedBox(height: 18.h),
+                          SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
+                        ],
+                      ),
+                    Spacer(),
+                    GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () async {
+                        logoutLoader(true);
+                        GetStorage().erase();
+                        await Future.delayed(const Duration(seconds: 1));
+                        logoutLoader(false);
+                        Get.offAll(() => LoginView());
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(15.r)),
+                        width: MediaQuery.sizeOf(context).width * 0.65,
+                        height: MediaQuery.sizeOf(context).height * 0.05,
+                        margin: EdgeInsets.symmetric(horizontal: 24.w),
+                        padding: EdgeInsets.zero,
+                        child: Obx(
+                          () =>
+                              logoutLoader.value
+                                  ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
+                                  : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text('Log Out', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                                      SizedBox(width: 16.w),
+                                      Icon(Icons.logout, color: Colors.white, size: 40.h),
+                                    ],
+                                  ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-      body: Center(
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
-            Get.to(() => AddEditOrderView(addEditEnum: AddEditEnum.Add));
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.add, color: Colors.white), SizedBox(width: 12), Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700))],
+                  ],
+                );
+              },
             ),
           ),
         ),
+        body:
+            dashboardController.loader.value
+                ? Center(child: Loader())
+                : GetBuilder<DashboardController>(
+                  id: UpdateKeys.updateOrderListInDashboard,
+                  builder:
+                      (controller) =>
+                          controller.orderDetailsList.isNotEmpty
+                              ? Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 25.w),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Expanded(
+                                      child: ListView(
+                                        children:
+                                            controller.orderDetailsList.map((order) {
+                                              log('order.deliveryDate => ${order.deliveryDate}');
+                                              List<OrderModel> listOfOrderModel =
+                                                  order.orderDetails['orderDetails'] != null && order.orderDetails['orderDetails'] is List && (order.orderDetails['orderDetails'] as List).isNotEmpty
+                                                      ? (order.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList()
+                                                      : [];
+                                              return Container(
+                                                padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.orderCardBackground,
+                                                  border: Border.all(color: Colors.black.withAlpha((255 * 0.2).toInt())),
+                                                  borderRadius: BorderRadius.circular(18.r),
+                                                ),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        VerticalTitleValueComponent(title: 'ID', value: order.id.toString()),
+                                                        if (order.createdAt != null)
+                                                          VerticalTitleValueComponent(title: 'Created At', value: DateFormatter.convertTimeStampIntoString(order.createdAt!), isEnd: true),
+                                                      ],
+                                                    ),
+                                                    SizedBox(height: 12.h),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        VerticalTitleValueComponent(title: 'Party Name', value: order.partyName),
+                                                        VerticalTitleValueComponent(title: 'Delivery Date', value: DateFormat('dd-MM-yyyy').format(order.deliveryDate), isCenter: true),
+                                                        VerticalTitleValueComponent(title: 'Number Of Items', value: order.numberOfItems.toString(), isEnd: true),
+                                                      ],
+                                                    ),
+                                                    SizedBox(height: 12.h),
+                                                    HorizontalTitleValueComponent(title: 'Total Quantity', value: order.totalQuantity.toString()),
+                                                    SizedBox(height: 12.h),
+                                                    HorizontalTitleValueComponent(title: 'Total Price', value: order.totalPrice.toString()),
+                                                    SizedBox(height: 12.h),
+                                                    HorizontalTitleValueComponent(title: 'GST Amount', value: order.gstAmount.toString()),
+                                                    SizedBox(height: 12.h),
+                                                    HorizontalTitleValueComponent(title: 'Grand Total', value: order.grandTotal.toString()),
+                                                    // SizedBox(height: 28.h),
+                                                    // Divider(height: 1, thickness: 0.5, color: Colors.black.withAlpha((255 * 0.3).toInt())),
+                                                    // SizedBox(height: 28.h),
+                                                  ],
+                                                ),
+                                              );
+                                            }).toList(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                              : Center(
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    Get.to(() => AddEditOrderView(addEditEnum: AddEditEnum.Add));
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.add, color: Colors.white),
+                                        SizedBox(width: 12),
+                                        Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                ),
       ),
     );
   }

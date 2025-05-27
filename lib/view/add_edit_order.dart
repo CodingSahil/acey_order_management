@@ -26,7 +26,8 @@ class AddEditOrderView extends StatefulWidget {
 }
 
 class _AddEditOrderViewState extends State<AddEditOrderView> {
-  final DashboardController dashboardController = DashboardController();
+  late final DashboardController dashboardController;
+
   late TextEditingController partyNameController = TextEditingController();
   late TextEditingController dateOfDeliveryController = TextEditingController();
   DateTime? selectedDate;
@@ -37,6 +38,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
 
   @override
   void initState() {
+    dashboardController = Get.find<DashboardController>();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await dashboardController.getProductList();
       await Future.delayed(Duration(milliseconds: 400));
@@ -371,15 +373,23 @@ class HorizontalTitleValueComponent extends StatelessWidget {
 }
 
 class VerticalTitleValueComponent extends StatelessWidget {
-  const VerticalTitleValueComponent({super.key, required this.title, required this.value});
+  const VerticalTitleValueComponent({super.key, required this.title, required this.value, this.isCenter = false, this.isEnd = false});
 
   final String title;
   final String value;
+  final bool isCenter;
+  final bool isEnd;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment:
+          isEnd
+              ? CrossAxisAlignment.end
+              : isCenter
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
       children: [Text('$title : ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))), Text(value.toString(), style: TextStyle(fontSize: 12, color: Colors.black))],
     );
   }

@@ -2,12 +2,15 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:acey_order_management/controller/order_preview_after_add_controller.dart';
+import 'package:acey_order_management/model/edit_order_navigation.dart';
 import 'package:acey_order_management/model/user_model.dart';
 import 'package:acey_order_management/utils/custom_snack_bar.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/label_text_fields.dart';
 import 'package:acey_order_management/utils/loader.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
+import 'package:acey_order_management/utils/streams/dashboard_streams.dart';
+import 'package:acey_order_management/view/dashboard_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,13 +31,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 
 class OrderPreviewAfterAddView extends StatefulWidget {
-  const OrderPreviewAfterAddView({super.key, required this.orderList, required this.discount, required this.selectedPackingType, required this.partyName, required this.dateOfDelivery});
+  const OrderPreviewAfterAddView({
+    super.key,
+    required this.orderList,
+    required this.discount,
+    required this.selectedPackingType,
+    required this.partyName,
+    required this.dateOfDelivery,
+    this.editOrderNavigationModel,
+  });
 
   final List<OrderModel> orderList;
   final int discount;
   final PackingType selectedPackingType;
   final String partyName;
   final String dateOfDelivery;
+  final EditOrderNavigationModel? editOrderNavigationModel;
 
   @override
   State<OrderPreviewAfterAddView> createState() => _OrderPreviewAfterAddViewState();
@@ -61,6 +73,8 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
   @override
   void initState() {
     orderPreviewAfterAddController = Get.find<OrderPreviewAfterAddController>();
+
+    log('OrderPreviewAfterAddView widget.editOrderNavigationModel != null ${widget.editOrderNavigationModel != null}');
 
     if (widget.orderList.isNotEmpty) {
       List<int> listOfQuantity = widget.orderList.map((e) => e.quantity ?? 0).toList();
@@ -246,6 +260,16 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                                 });
                               }
 
+                              num? remainingUpdate =
+                                  widget.editOrderNavigationModel != null
+                                      ? widget.editOrderNavigationModel!.remainingUpdate == 0
+                                          ? 0
+                                          : widget.editOrderNavigationModel!.remainingUpdate
+                                      : null;
+                              if (remainingUpdate != null && remainingUpdate != 0) {
+                                remainingUpdate--;
+                              }
+
                               OrderDetailsModel orderDetailsModel = OrderDetailsModel(
                                 id: orderPreviewAfterAddController.orderDetailsModelList.isNotEmpty ? getNewID(orderPreviewAfterAddController.orderDetailsModelList.map((e) => e.id).toList()) : 1,
                                 userID: userModel != null && userModel!.id != -1000 ? userModel!.id : 1,
@@ -260,12 +284,23 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                                 totalPrice: totalPrice,
                                 gstAmount: gstAmount,
                                 grandTotal: priceAfterGST,
+                                remainingUpdate: remainingUpdate,
+                                discount: widget.discount,
+                                packagingType: widget.selectedPackingType,
                               );
-
-                              await orderPreviewAfterAddController.createOrder(request: orderDetailsModel.toJson(), context: context);
+                              if (widget.editOrderNavigationModel != null) {
+                                await orderPreviewAfterAddController.updateOrder(request: orderDetailsModel.toJson(), context: context, id: widget.editOrderNavigationModel!.orderID);
+                              } else {
+                                await orderPreviewAfterAddController.createOrder(request: orderDetailsModel.toJson(), context: context);
+                              }
                               await Future.delayed(Duration(seconds: 1));
                               await orderPreviewAfterAddController.getOrderList(isLoaderRequire: false);
                               loader(false);
+                              await Future.delayed(Duration(milliseconds: 500));
+                              changeDashboardRefreshStatus(DashboardRefreshEnum.refresh);
+                              await Future.delayed(Duration(milliseconds: 500));
+                              Get.back();
+                              Get.back();
                             },
                           ),
                         ],
@@ -274,21 +309,22 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
               },
             );
 
-            if (showSnackBar != null) {
-              if (showSnackBar!) {
-                successSnackBar(context: context, title: "Email sent successfully!!");
-              } else {
-                errorSnackBar(context: context, title: "Failed to send Email");
-              }
-              setState(() {
-                showSnackBar = null;
-              });
-            }
-          },
+            // if (showSnackBar != null) {
+            //   if (showSnackBar!) {
+            //     successSnackBar(context: context, title: "Email sent successfully!!");
+            //   } else {
+            //     errorSnackBar(context: context, title: "Failed to send Email");
+            //   }
+            //   setState(() {
+            //     showSnackBar = null;
+            //   });
+            // }
+
+            },
           label:
               loader.value
                   ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
-                  : Text('Submit Order', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+                  : Text(widget.editOrderNavigationModel != null ? 'Update Order' : 'Submit Order', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
           icon: loader.value ? SizedBox.shrink() : Icon(Icons.done, color: Colors.white),
         ),
       ),

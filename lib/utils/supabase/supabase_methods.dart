@@ -11,4 +11,9 @@ class SupabaseMethods {
     await Supabase.instance.client.from(tableKey).insert(request);
     log('createObjectInTable SupabaseMethods');
   }
+
+  static Future<void> updateObjectInTable({required String tableKey, required Map<String, dynamic> request, required num id}) async {
+    await Supabase.instance.client.from(tableKey).update(request).eq('id', id);
+    log('updateObjectInTable SupabaseMethods');
+  }
 }

@@ -15,13 +15,28 @@ class OrderPreviewAfterAddController extends GetxController {
   Future<void> getOrderList({bool isLoaderRequire = true}) async {
     if (isLoaderRequire) loader(true);
     orderDetailsModelList = await SupabaseMethods.getFromList<OrderDetailsModel>(tableKey: SupabaseTableKeys.orderDetails, fromJson: OrderDetailsModel.fromJson);
-    log(orderDetailsModelList.map((e) => jsonEncode(e.toJson()),).toList().toString(),name: 'orderDetailsModelList.map => ');
+    log(orderDetailsModelList.map((e) => jsonEncode(e.toJson())).toList().toString(), name: 'orderDetailsModelList.map => ');
     if (isLoaderRequire) loader(false);
   }
 
   Future<void> createOrder({required Map<String, dynamic> request, required BuildContext context}) async {
     createLoader(true);
     await SupabaseMethods.createObjectInTable(tableKey: SupabaseTableKeys.orderDetails, request: request);
+    // try {
+    //   await SupabaseMethods.createObjectInTable<OrderDetailsModel>(tableKey: SupabaseTableKeys.orderDetails, request: request);
+    //   log('createOrder controller');
+    //   await Future.delayed(Duration(seconds: 1));
+    //   await getOrderList(isLoaderRequire: false);
+    // } on Exception catch (e) {
+    //   errorSnackBar(context: context, title: e.toString());
+    //   createLoader(false);
+    // }
+    createLoader(false);
+  }
+
+  Future<void> updateOrder({required Map<String, dynamic> request, required BuildContext context, required num id}) async {
+    createLoader(true);
+    await SupabaseMethods.updateObjectInTable(tableKey: SupabaseTableKeys.orderDetails, request: request, id: id);
     // try {
     //   await SupabaseMethods.createObjectInTable<OrderDetailsModel>(tableKey: SupabaseTableKeys.orderDetails, request: request);
     //   log('createOrder controller');

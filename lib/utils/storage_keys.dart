@@ -4,4 +4,5 @@ class StorageKeys {
 
 class UpdateKeys {
   static final updateOrderListInDashboard = 'updateOrderListInDashboard';
+  static final updateAddEditOrder = 'updateAddEditOrder';
 }

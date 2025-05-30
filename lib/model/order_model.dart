@@ -1,8 +1,8 @@
 import 'package:acey_order_management/model/product_model.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
+import 'package:acey_order_management/utils/enum.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
 
 class OrderDetailsModel extends Equatable {
   const OrderDetailsModel({
@@ -20,6 +20,9 @@ class OrderDetailsModel extends Equatable {
     this.totalPrice,
     this.gstAmount,
     this.grandTotal,
+    required this.remainingUpdate,
+    required this.discount,
+    required this.packagingType,
   });
 
   final num id;
@@ -36,6 +39,9 @@ class OrderDetailsModel extends Equatable {
   final num? totalPrice;
   final num? gstAmount;
   final num? grandTotal;
+  final num? remainingUpdate;
+  final num discount;
+  final PackingType packagingType;
 
   factory OrderDetailsModel.fromJson(Map<String, dynamic> json) {
     return OrderDetailsModel(
@@ -56,6 +62,9 @@ class OrderDetailsModel extends Equatable {
       totalPrice: json['totalPrice'] != null ? json['totalPrice'] as num : 0,
       gstAmount: json['gstAmount'] != null ? json['gstAmount'] as num : 0,
       grandTotal: json['grandTotal'] != null ? json['grandTotal'] as num : 0,
+      remainingUpdate: json['remainingUpdate'] != null ? json['remainingUpdate'] as num : 0,
+      packagingType: convertStringToPackingType(json['packagingType'] as String),
+      discount: json['discount'] as num,
     );
   }
 
@@ -74,6 +83,9 @@ class OrderDetailsModel extends Equatable {
     num? totalPrice,
     num? gstAmount,
     num? grandTotal,
+    num? remainingUpdate,
+    PackingType? packagingType,
+    num? discount,
   }) {
     return OrderDetailsModel(
       id: id ?? this.id,
@@ -90,6 +102,9 @@ class OrderDetailsModel extends Equatable {
       totalPrice: totalPrice ?? this.totalPrice,
       gstAmount: gstAmount ?? this.gstAmount,
       grandTotal: grandTotal ?? this.grandTotal,
+      remainingUpdate: remainingUpdate ?? this.remainingUpdate,
+      packagingType: packagingType ?? this.packagingType,
+      discount: discount ?? this.discount,
     );
   }
 
@@ -108,10 +123,31 @@ class OrderDetailsModel extends Equatable {
     if (totalPrice != null && totalPrice != 0 && totalPrice != -1000) 'totalPrice': totalPrice,
     if (gstAmount != null && gstAmount != 0 && gstAmount != -1000) 'gstAmount': gstAmount,
     if (grandTotal != null && grandTotal != 0 && grandTotal != -1000) 'grandTotal': grandTotal,
+    if (remainingUpdate != null) 'remainingUpdate': remainingUpdate,
+    'packagingType': convertPackingTypeToString(packagingType),
+    if (discount != 0) 'discount': discount,
   };
 
   @override
-  List<Object?> get props => [id, createdAt, updatedAt, deletedAt, userID, orderDetails, excelSheetURL, partyName, deliveryDate, numberOfItems, totalQuantity, totalPrice, gstAmount, grandTotal];
+  List<Object?> get props => [
+    id,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    userID,
+    orderDetails,
+    excelSheetURL,
+    partyName,
+    deliveryDate,
+    numberOfItems,
+    totalQuantity,
+    totalPrice,
+    gstAmount,
+    grandTotal,
+    remainingUpdate,
+    packagingType,
+    discount,
+  ];
 }
 
 class OrderModel extends Equatable {
@@ -125,7 +161,7 @@ class OrderModel extends Equatable {
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    return OrderModel(productModel: ProductModel.fromJson(json['productModel']), quantity: json['quantity']);
+    return OrderModel(productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>), quantity: json['quantity']);
   }
 
   Map<String, dynamic> toJson() {

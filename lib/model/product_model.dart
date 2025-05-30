@@ -72,16 +72,16 @@ class ProductModel extends Equatable {
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: json['id'] ?? 0,
-      srNumber: json['SeriesNumber'] ?? '',
-      referencePartNumber: json['ReferencePartNumber'] ?? '',
-      aeplPartNumber: json['AeplPartNumber'] ?? '',
-      description: json['Description'] ?? '',
-      moq: json['MOQ'] ?? 0,
-      mrp: json['MRP'] ?? 0,
-      mmOuterLength: json['MmOuterLength'] ?? '',
-      inchOuterLength: json['InchOuterLength'] ?? '',
-      mmTotalLength: json['MmTotalLength'] ?? '',
-      inchTotalLength: json['InchTotalLength'] ?? '',
+      srNumber: json['srNumber'] ?? '',
+      referencePartNumber: json['referencePartNumber'] ?? '',
+      aeplPartNumber: json['aeplPartNumber'] ?? '',
+      description: json['description'] ?? '',
+      moq: json['moq'] ?? 0,
+      mrp: json['mrp'] ?? 0,
+      mmOuterLength: json['mmOuterLength'] ?? '',
+      inchOuterLength: json['inchOuterLength'] ?? '',
+      mmTotalLength: json['mmTotalLength'] ?? '',
+      inchTotalLength: json['inchTotalLength'] ?? '',
     );
   }
 

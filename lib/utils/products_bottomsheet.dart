@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/main.dart';
+import 'package:acey_order_management/model/edit_order_navigation.dart';
 import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/model/product_model.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
@@ -251,9 +252,18 @@ Future<void> productBottomSheet({
   );
 }
 
-Future<void> selectDiscountAndPackingType({required BuildContext context, required List<OrderModel> orderList, required String partyName, required String dateOfDelivery}) async {
-  int selectDiscount = 57;
-  PackingType selectedPackingType = PackingType.RegularPacking;
+Future<void> selectDiscountAndPackingType({
+  required BuildContext context,
+  EditOrderNavigationModel? editOrderNavigationModel,
+  required List<OrderModel> orderList,
+  required String partyName,
+  required String dateOfDelivery,
+  num? preselectedDiscount,
+  PackingType? preselectedPackingType,
+}) async {
+  int selectDiscount = preselectedDiscount?.toInt() ?? 57;
+  PackingType selectedPackingType = preselectedPackingType ?? PackingType.RegularPacking;
+
   await showModalBottomSheet(
     context: context,
     backgroundColor: Colors.white,
@@ -385,6 +395,7 @@ Future<void> selectDiscountAndPackingType({required BuildContext context, requir
                                 orderList: orderList,
                                 partyName: partyName,
                                 dateOfDelivery: dateOfDelivery,
+                                editOrderNavigationModel: editOrderNavigationModel,
                               ),
                             );
                           },

@@ -14,6 +14,8 @@ import 'package:acey_order_management/utils/loader.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/login_view.dart';
+import 'package:acey_order_management/view/order_details_view.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -52,6 +54,13 @@ class _DashboardViewState extends State<DashboardView> {
   Future<void> onAddEdit() async {
     if (userModel != null) {
       await dashboardController.getOrderList(userID: userModel!.id);
+      dashboardController.update([UpdateKeys.updateOrderListInDashboard]);
+    }
+  }
+
+  Future<void> onDelete(int orderID) async {
+    if (userModel != null) {
+      await dashboardController.deleteOrder(deletedAt: Timestamp.now(), orderID: orderID, userID: userModel!.id);
       dashboardController.update([UpdateKeys.updateOrderListInDashboard]);
     }
   }
@@ -152,34 +161,21 @@ class _DashboardViewState extends State<DashboardView> {
                                     Expanded(
                                       child: ListView(
                                         children:
-                                            controller.orderDetailsList.map((order) {
+                                            controller.orderDetailsList.where((element) => element.deletedAt == null).map((order) {
                                               List<OrderModel> listOfOrderModel =
                                                   order.orderDetails['orderDetails'] != null && order.orderDetails['orderDetails'] is List && (order.orderDetails['orderDetails'] as List).isNotEmpty
                                                       ? (order.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList()
                                                       : [];
 
-                                              log(order.id.toString(), name: 'order.id => ');
+                                              bool deleteLoader = false;
+
                                               return GestureDetector(
                                                 behavior: HitTestBehavior.translucent,
                                                 onTap: () {
                                                   if (order.remainingUpdate != null && order.remainingUpdate! <= 0) {
                                                     errorSnackBar(context: context, title: "You can only Edit Twice");
                                                   } else {
-                                                    Get.to(
-                                                      () => AddEditOrderView(
-                                                        arguments: EditOrderNavigationModel(
-                                                          orderID: order.id,
-                                                          partyName: order.partyName,
-                                                          dateOfDelivery: order.deliveryDate,
-                                                          orderList: listOfOrderModel,
-                                                          quantityList: listOfOrderModel.map((e) => e.quantity ?? 0).toList(),
-                                                          remainingUpdate: order.remainingUpdate ?? 0,
-                                                          discount: order.discount,
-                                                          packagingType: order.packagingType,
-                                                          onAddEdit: onAddEdit,
-                                                        ),
-                                                      ),
-                                                    );
+                                                    Get.to(() => OrderDetailsView(orderDetailsModel: order));
                                                   }
                                                 },
                                                 child: Container(
@@ -213,13 +209,91 @@ class _DashboardViewState extends State<DashboardView> {
                                                         ],
                                                       ),
                                                       SizedBox(height: 12.h),
-                                                      HorizontalTitleValueComponent(title: 'Total Quantity', value: order.totalQuantity.toString()),
-                                                      SizedBox(height: 12.h),
-                                                      HorizontalTitleValueComponent(title: 'Total Price', value: order.totalPrice.toString()),
-                                                      SizedBox(height: 12.h),
-                                                      HorizontalTitleValueComponent(title: 'GST Amount', value: order.gstAmount.toString()),
-                                                      SizedBox(height: 12.h),
-                                                      HorizontalTitleValueComponent(title: 'Grand Total', value: order.grandTotal.toString()),
+                                                      Row(
+                                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              HorizontalTitleValueComponent(title: 'Total Quantity', value: order.totalQuantity.toString()),
+                                                              SizedBox(height: 12.h),
+                                                              HorizontalTitleValueComponent(title: 'Total Price', value: order.totalPrice.toString()),
+                                                              SizedBox(height: 12.h),
+                                                              HorizontalTitleValueComponent(title: 'GST Amount', value: order.gstAmount.toString()),
+                                                              SizedBox(height: 12.h),
+                                                              HorizontalTitleValueComponent(title: 'Grand Total', value: order.grandTotal.toString()),
+                                                            ],
+                                                          ),
+                                                          Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                                            mainAxisAlignment: MainAxisAlignment.end,
+                                                            children: [
+                                                              GestureDetector(
+                                                                behavior: HitTestBehavior.translucent,
+                                                                onTap: () {
+                                                                  Get.to(
+                                                                    () => AddEditOrderView(
+                                                                      arguments: EditOrderNavigationModel(
+                                                                        orderID: order.id,
+                                                                        partyName: order.partyName,
+                                                                        dateOfDelivery: order.deliveryDate,
+                                                                        orderList: listOfOrderModel,
+                                                                        quantityList: listOfOrderModel.map((e) => e.quantity ?? 0).toList(),
+                                                                        remainingUpdate: order.remainingUpdate ?? 0,
+                                                                        discount: order.discount,
+                                                                        packagingType: order.packagingType,
+                                                                        onAddEdit: onAddEdit,
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                                child: Padding(
+                                                                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Icon(Icons.edit, size: 14, color: Colors.black),
+                                                                      SizedBox(width: 6.w),
+                                                                      Text('Edit', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 12)),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              StatefulBuilder(
+                                                                builder:
+                                                                    (context, setInnerState) => GestureDetector(
+                                                                      behavior: HitTestBehavior.translucent,
+                                                                      onTap: () async {
+                                                                        if (!deleteLoader) {
+                                                                          setInnerState(() {
+                                                                            deleteLoader = true;
+                                                                          });
+                                                                          await onDelete(order.id.toInt());
+                                                                          setInnerState(() {
+                                                                            deleteLoader = false;
+                                                                          });
+                                                                        }
+                                                                      },
+                                                                      child:
+                                                                          deleteLoader
+                                                                              ? Loader(color: Colors.red)
+                                                                              : Padding(
+                                                                                padding: EdgeInsets.symmetric(vertical: 8.h),
+                                                                                child: Row(
+                                                                                  children: [
+                                                                                    Icon(Icons.delete, size: 14, color: Colors.red),
+                                                                                    SizedBox(width: 6.w),
+                                                                                    Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 12)),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+
                                                       // SizedBox(height: 28.h),
                                                       // Divider(height: 1, thickness: 0.5, color: Colors.black.withAlpha((255 * 0.3).toInt())),
                                                       // SizedBox(height: 28.h),

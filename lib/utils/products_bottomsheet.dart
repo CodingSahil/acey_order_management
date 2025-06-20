@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/main.dart';
 import 'package:acey_order_management/model/edit_order_navigation.dart';
-import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/model/product_model.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/order_preview_after_add_view.dart';
@@ -254,13 +253,11 @@ Future<void> productBottomSheet({
 
 Future<void> selectDiscountAndPackingType({
   required BuildContext context,
-  EditOrderNavigationModel? editOrderNavigationModel,
-  required List<OrderModel> orderList,
-  required String partyName,
-  required String dateOfDelivery,
+  required EditOrderNavigationModel editOrderNavigationModel,
   num? preselectedDiscount,
   PackingType? preselectedPackingType,
 }) async {
+  log('editOrderNavigationModel => ${editOrderNavigationModel.partyName}');
   int selectDiscount = preselectedDiscount?.toInt() ?? 57;
   PackingType selectedPackingType = preselectedPackingType ?? PackingType.RegularPacking;
 
@@ -390,12 +387,18 @@ Future<void> selectDiscountAndPackingType({
                             Get.back();
                             Get.to(
                               () => OrderPreviewAfterAddView(
-                                discount: selectDiscount,
-                                selectedPackingType: selectedPackingType,
-                                orderList: orderList,
-                                partyName: partyName,
-                                dateOfDelivery: dateOfDelivery,
-                                editOrderNavigationModel: editOrderNavigationModel,
+                                arguments:
+                                    editOrderNavigationModel.orderID != null
+                                        ? editOrderNavigationModel
+                                        : EditOrderNavigationModel(
+                                          partyName: editOrderNavigationModel.partyName,
+                                          dateOfDelivery: editOrderNavigationModel.dateOfDelivery,
+                                          orderList: editOrderNavigationModel.orderList,
+                                          quantityList: editOrderNavigationModel.quantityList,
+                                          packagingType: selectedPackingType,
+                                          discount: selectDiscount,
+                                          onAddEdit: editOrderNavigationModel.onAddEdit,
+                                        ),
                               ),
                             );
                           },

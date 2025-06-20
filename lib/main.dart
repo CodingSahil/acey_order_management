@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:acey_order_management/binding/store_binding.dart';
+import 'package:acey_order_management/utils/routes/app_route_generator.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
-import 'package:acey_order_management/view/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
       designSize: const Size(720, 1520),
       builder: (context, child) {
         SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-        return GetMaterialApp(debugShowCheckedModeBanner: false, title: 'ACEY App', initialBinding: StoreBinding(), home: SplashScreenView());
+        return GetMaterialApp(debugShowCheckedModeBanner: false, title: 'ACEY App', initialBinding: StoreBinding(), onGenerateRoute: onGenerateRoute);
       },
     );
   }

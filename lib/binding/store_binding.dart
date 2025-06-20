@@ -6,9 +6,8 @@ import 'package:get/get.dart';
 class StoreBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => LoginController(),);
-    Get.lazyPut(() => DashboardController(),);
-    Get.lazyPut(() => OrderPreviewAfterAddController(),);
+    Get.lazyPut(() => LoginController());
+    Get.lazyPut(() => DashboardController());
+    Get.lazyPut(() => OrderPreviewAfterAddController());
   }
-
 }

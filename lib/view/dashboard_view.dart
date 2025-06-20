@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:acey_order_management/controller/dashboard_controller.dart';
+import 'package:acey_order_management/controller/order_preview_after_add_controller.dart';
 import 'package:acey_order_management/main.dart';
 import 'package:acey_order_management/model/edit_order_navigation.dart';
 import 'package:acey_order_management/model/order_model.dart';
@@ -10,7 +12,6 @@ import 'package:acey_order_management/utils/custom_snack_bar.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/loader.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
-import 'package:acey_order_management/utils/streams/dashboard_streams.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/login_view.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ class _DashboardViewState extends State<DashboardView> {
   UserModel? userModel;
   late final GetStorage getStorage;
   late final DashboardController dashboardController;
+  late final OrderPreviewAfterAddController orderPreviewAfterAddController;
   RxBool logoutLoader = false.obs;
 
   @override
@@ -37,6 +39,7 @@ class _DashboardViewState extends State<DashboardView> {
     super.initState();
     getStorage = GetStorage();
     dashboardController = Get.find<DashboardController>();
+    orderPreviewAfterAddController = Get.find<OrderPreviewAfterAddController>();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       var data = await getStorage.read(StorageKeys.userDetails);
       userModel = UserModel.fromJson(jsonDecode(data.toString()));
@@ -46,216 +49,213 @@ class _DashboardViewState extends State<DashboardView> {
     });
   }
 
+  Future<void> onAddEdit() async {
+    if (userModel != null) {
+      await dashboardController.getOrderList(userID: userModel!.id);
+      dashboardController.update([UpdateKeys.updateOrderListInDashboard]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: dashboardStreamController.stream,
-      builder: (context, snapshot) {
-        if (snapshot.data != null && snapshot.data! == DashboardRefreshEnum.refresh) {
-          if (userModel != null) {
-            dashboardController.getOrderList(userID: userModel!.id);
-            changeDashboardRefreshStatus(DashboardRefreshEnum.none);
-          }
-        }
-        return Obx(
-          () => Scaffold(
-            backgroundColor: Colors.white,
-            appBar: commonAppBar(title: 'Dashboard'),
-            floatingActionButton:
-                dashboardController.orderDetailsList.isNotEmpty
-                    ? FloatingActionButton.extended(
-                      onPressed: () {
-                        Get.to(() => AddEditOrderView());
-                      },
-                      backgroundColor: Colors.blueAccent,
-                      icon: Icon(Icons.add, color: Colors.white),
-                      label: Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                    )
-                    : SizedBox.shrink(),
-            drawer: Drawer(
-              backgroundColor: Colors.white,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 30.w,
-                  right: 30.w,
-                  top: MediaQuery.sizeOf(context).height * 0.04 + (isIOS ? MediaQuery.sizeOf(context).height * 0.035 : 0),
-                  bottom: MediaQuery.sizeOf(context).height * 0.02 + (isIOS ? MediaQuery.sizeOf(context).height * 0.01 : 0),
-                ),
-                child: StatefulBuilder(
-                  builder: (context, setDrawerState) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 18.h),
-                        if (userModel != null)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(userModel!.email, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
-                              SizedBox(height: 18.h),
-                              Divider(color: Colors.black.withAlpha((255 * 0.4).toInt()), height: 1, thickness: 0.5),
-                              SizedBox(height: 18.h),
-                              SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
-                            ],
-                          ),
-                        Spacer(),
-                        GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: () async {
-                            logoutLoader(true);
-                            GetStorage().erase();
-                            await Future.delayed(const Duration(seconds: 1));
-                            logoutLoader(false);
-                            Get.offAll(() => LoginView());
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(15.r)),
-                            width: MediaQuery.sizeOf(context).width * 0.65,
-                            height: MediaQuery.sizeOf(context).height * 0.05,
-                            margin: EdgeInsets.symmetric(horizontal: 24.w),
-                            padding: EdgeInsets.zero,
-                            child: Obx(
-                              () =>
-                                  logoutLoader.value
-                                      ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
-                                      : Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text('Log Out', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
-                                          SizedBox(width: 16.w),
-                                          Icon(Icons.logout, color: Colors.white, size: 40.h),
-                                        ],
-                                      ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
+    return Obx(
+      () => Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonAppBar(title: 'Dashboard'),
+        floatingActionButton:
+            dashboardController.orderDetailsList.isNotEmpty
+                ? FloatingActionButton.extended(
+                  onPressed: () {
+                    Get.to(() => AddEditOrderView(arguments: onAddEdit));
                   },
-                ),
-              ),
+                  backgroundColor: Colors.blueAccent,
+                  icon: Icon(Icons.add, color: Colors.white),
+                  label: Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                )
+                : SizedBox.shrink(),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 30.w,
+              right: 30.w,
+              top: MediaQuery.sizeOf(context).height * 0.04 + (isIOS ? MediaQuery.sizeOf(context).height * 0.035 : 0),
+              bottom: MediaQuery.sizeOf(context).height * 0.02 + (isIOS ? MediaQuery.sizeOf(context).height * 0.01 : 0),
             ),
-            body:
-                dashboardController.loader.value
-                    ? Center(child: Loader())
-                    : GetBuilder<DashboardController>(
-                      id: UpdateKeys.updateOrderListInDashboard,
-                      builder:
-                          (controller) =>
-                              controller.orderDetailsList.isNotEmpty
-                                  ? Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 25.w),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Expanded(
-                                          child: ListView(
-                                            children:
-                                                controller.orderDetailsList.map((order) {
-                                                  List<OrderModel> listOfOrderModel =
-                                                      order.orderDetails['orderDetails'] != null &&
-                                                              order.orderDetails['orderDetails'] is List &&
-                                                              (order.orderDetails['orderDetails'] as List).isNotEmpty
-                                                          ? (order.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList()
-                                                          : [];
-                                                  return GestureDetector(
-                                                    behavior: HitTestBehavior.translucent,
-                                                    onTap: () {
-                                                      if (order.remainingUpdate != null && order.remainingUpdate! <= 0) {
-                                                        errorSnackBar(context: context, title: "You can only Edit Twice");
-                                                      } else {
-                                                        Get.to(
-                                                          () => AddEditOrderView(
-                                                            editOrderNavigationModel: EditOrderNavigationModel(
-                                                              orderID: order.id,
-                                                              partyName: order.partyName,
-                                                              dateOfDelivery: order.deliveryDate,
-                                                              orderList: listOfOrderModel,
-                                                              quantityList: listOfOrderModel.map((e) => e.quantity ?? 0).toList(),
-                                                              remainingUpdate: order.remainingUpdate ?? 0,
-                                                              discount: order.discount,
-                                                              packagingType: order.packagingType,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      }
-                                                    },
-                                                    child: Container(
-                                                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
-                                                      margin: EdgeInsets.only(bottom: 24.h),
-                                                      decoration: BoxDecoration(
-                                                        color: AppColors.orderCardBackground,
-                                                        border: Border.all(color: Colors.black.withAlpha((255 * 0.2).toInt())),
-                                                        borderRadius: BorderRadius.circular(18.r),
+            child: StatefulBuilder(
+              builder: (context, setDrawerState) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 18.h),
+                    if (userModel != null)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(userModel!.email, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
+                          SizedBox(height: 18.h),
+                          Divider(color: Colors.black.withAlpha((255 * 0.4).toInt()), height: 1, thickness: 0.5),
+                          SizedBox(height: 18.h),
+                          SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
+                        ],
+                      ),
+                    Spacer(),
+                    GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () async {
+                        logoutLoader(true);
+                        GetStorage().erase();
+                        await Future.delayed(const Duration(seconds: 1));
+                        logoutLoader(false);
+                        Get.offAll(() => LoginView());
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(15.r)),
+                        width: MediaQuery.sizeOf(context).width * 0.65,
+                        height: MediaQuery.sizeOf(context).height * 0.05,
+                        margin: EdgeInsets.symmetric(horizontal: 24.w),
+                        padding: EdgeInsets.zero,
+                        child: Obx(
+                          () =>
+                              logoutLoader.value
+                                  ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
+                                  : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text('Log Out', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                                      SizedBox(width: 16.w),
+                                      Icon(Icons.logout, color: Colors.white, size: 40.h),
+                                    ],
+                                  ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        body:
+            dashboardController.loader.value
+                ? Center(child: Loader())
+                : GetBuilder<DashboardController>(
+                  id: UpdateKeys.updateOrderListInDashboard,
+                  builder:
+                      (controller) =>
+                          controller.orderDetailsList.isNotEmpty
+                              ? Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 25.w),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Expanded(
+                                      child: ListView(
+                                        children:
+                                            controller.orderDetailsList.map((order) {
+                                              List<OrderModel> listOfOrderModel =
+                                                  order.orderDetails['orderDetails'] != null && order.orderDetails['orderDetails'] is List && (order.orderDetails['orderDetails'] as List).isNotEmpty
+                                                      ? (order.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList()
+                                                      : [];
+
+                                              log(order.id.toString(), name: 'order.id => ');
+                                              return GestureDetector(
+                                                behavior: HitTestBehavior.translucent,
+                                                onTap: () {
+                                                  if (order.remainingUpdate != null && order.remainingUpdate! <= 0) {
+                                                    errorSnackBar(context: context, title: "You can only Edit Twice");
+                                                  } else {
+                                                    Get.to(
+                                                      () => AddEditOrderView(
+                                                        arguments: EditOrderNavigationModel(
+                                                          orderID: order.id,
+                                                          partyName: order.partyName,
+                                                          dateOfDelivery: order.deliveryDate,
+                                                          orderList: listOfOrderModel,
+                                                          quantityList: listOfOrderModel.map((e) => e.quantity ?? 0).toList(),
+                                                          remainingUpdate: order.remainingUpdate ?? 0,
+                                                          discount: order.discount,
+                                                          packagingType: order.packagingType,
+                                                          onAddEdit: onAddEdit,
+                                                        ),
                                                       ),
-                                                      child: Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                    );
+                                                  }
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
+                                                  margin: EdgeInsets.only(bottom: 24.h),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.orderCardBackground,
+                                                    border: Border.all(color: Colors.black.withAlpha((255 * 0.2).toInt())),
+                                                    borderRadius: BorderRadius.circular(18.r),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                         children: [
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: [
-                                                              VerticalTitleValueComponent(title: 'ID', value: order.id.toString()),
-                                                              if (order.createdAt != null)
-                                                                VerticalTitleValueComponent(title: 'Created At', value: DateFormatter.convertTimeStampIntoString(order.createdAt!), isEnd: true),
-                                                            ],
-                                                          ),
-                                                          SizedBox(height: 12.h),
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: [
-                                                              VerticalTitleValueComponent(title: 'Party Name', value: order.partyName),
-                                                              VerticalTitleValueComponent(title: 'Delivery Date', value: DateFormat('dd-MM-yyyy').format(order.deliveryDate), isCenter: true),
-                                                              VerticalTitleValueComponent(title: 'Number Of Items', value: order.numberOfItems.toString(), isEnd: true),
-                                                            ],
-                                                          ),
-                                                          SizedBox(height: 12.h),
-                                                          HorizontalTitleValueComponent(title: 'Total Quantity', value: order.totalQuantity.toString()),
-                                                          SizedBox(height: 12.h),
-                                                          HorizontalTitleValueComponent(title: 'Total Price', value: order.totalPrice.toString()),
-                                                          SizedBox(height: 12.h),
-                                                          HorizontalTitleValueComponent(title: 'GST Amount', value: order.gstAmount.toString()),
-                                                          SizedBox(height: 12.h),
-                                                          HorizontalTitleValueComponent(title: 'Grand Total', value: order.grandTotal.toString()),
-                                                          // SizedBox(height: 28.h),
-                                                          // Divider(height: 1, thickness: 0.5, color: Colors.black.withAlpha((255 * 0.3).toInt())),
-                                                          // SizedBox(height: 28.h),
+                                                          VerticalTitleValueComponent(title: 'ID', value: order.id.toString()),
+                                                          if (order.createdAt != null)
+                                                            VerticalTitleValueComponent(title: 'Created At', value: DateFormatter.convertTimeStampIntoString(order.createdAt!), isEnd: true),
                                                         ],
                                                       ),
-                                                    ),
-                                                  );
-                                                }).toList(),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                  : Center(
-                                    child: GestureDetector(
-                                      behavior: HitTestBehavior.translucent,
-                                      onTap: () {
-                                        Get.to(() => AddEditOrderView());
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.add, color: Colors.white),
-                                            SizedBox(width: 12),
-                                            Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                                          ],
-                                        ),
+                                                      SizedBox(height: 12.h),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          VerticalTitleValueComponent(title: 'Party Name', value: order.partyName),
+                                                          VerticalTitleValueComponent(title: 'Delivery Date', value: DateFormat('dd-MM-yyyy').format(order.deliveryDate), isCenter: true),
+                                                          VerticalTitleValueComponent(title: 'Number Of Items', value: order.numberOfItems.toString(), isEnd: true),
+                                                        ],
+                                                      ),
+                                                      SizedBox(height: 12.h),
+                                                      HorizontalTitleValueComponent(title: 'Total Quantity', value: order.totalQuantity.toString()),
+                                                      SizedBox(height: 12.h),
+                                                      HorizontalTitleValueComponent(title: 'Total Price', value: order.totalPrice.toString()),
+                                                      SizedBox(height: 12.h),
+                                                      HorizontalTitleValueComponent(title: 'GST Amount', value: order.gstAmount.toString()),
+                                                      SizedBox(height: 12.h),
+                                                      HorizontalTitleValueComponent(title: 'Grand Total', value: order.grandTotal.toString()),
+                                                      // SizedBox(height: 28.h),
+                                                      // Divider(height: 1, thickness: 0.5, color: Colors.black.withAlpha((255 * 0.3).toInt())),
+                                                      // SizedBox(height: 28.h),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
                                       ),
                                     ),
+                                  ],
+                                ),
+                              )
+                              : Center(
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTap: () {
+                                    Get.to(() => AddEditOrderView(arguments: onAddEdit));
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.add, color: Colors.white),
+                                        SizedBox(width: 12),
+                                        Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                                      ],
+                                    ),
                                   ),
-                    ),
-          ),
-        );
-      },
+                                ),
+                              ),
+                ),
+      ),
     );
   }
 }

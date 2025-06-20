@@ -20,14 +20,14 @@ String convertEnumToString(UserType userType) {
 
 PackingType convertStringToPackingType(String packingType) {
   return PackingType.values.firstWhereOrNull((element) {
-        return element.toString() == packingType.replaceAll(" ", "");
+        return element.toString().split(".").last == packingType.replaceAll(" ", "");
       }) ??
       PackingType.RegularPacking;
 }
 
 String convertPackingTypeToString(PackingType packingType) {
   if (PackingType.values.any((element) => element == packingType)) {
-    String packingTypeString = packingType.toString().trim();
+    String packingTypeString = packingType.toString().trim().split(".").last;
     return packingTypeString;
   }
   return '';

@@ -8,6 +8,7 @@ import 'package:acey_order_management/utils/app_bar.dart';
 import 'package:acey_order_management/utils/app_colors.dart';
 import 'package:acey_order_management/utils/custom_snack_bar.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
+import 'package:acey_order_management/utils/enum.dart';
 import 'package:acey_order_management/utils/label_text_fields.dart';
 import 'package:acey_order_management/utils/loader.dart';
 import 'package:acey_order_management/utils/products_bottomsheet.dart';
@@ -19,9 +20,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class AddEditOrderView extends StatefulWidget {
-  const AddEditOrderView({super.key, this.editOrderNavigationModel});
+  const AddEditOrderView({super.key, required this.arguments});
 
-  final EditOrderNavigationModel? editOrderNavigationModel;
+  final dynamic arguments;
 
   @override
   State<AddEditOrderView> createState() => _AddEditOrderViewState();
@@ -47,13 +48,17 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
       await dashboardController.getProductList();
       // await Future.delayed(Duration(milliseconds: 400));
 
-      if (widget.editOrderNavigationModel != null) {
-        partyNameController.text = widget.editOrderNavigationModel!.partyName;
-        dateOfDeliveryController.text = DateFormat('dd-MM-yyyy').format(widget.editOrderNavigationModel!.dateOfDelivery);
-        String tempFormattedDate = DateFormat('yyyy-MM-dd').format(widget.editOrderNavigationModel!.dateOfDelivery);
+      if (widget.arguments != null && widget.arguments is EditOrderNavigationModel) {
+        editOrderNavigationModel = widget.arguments as EditOrderNavigationModel;
+      }
+
+      if (editOrderNavigationModel != null) {
+        partyNameController.text = editOrderNavigationModel!.partyName;
+        dateOfDeliveryController.text = DateFormat('dd-MM-yyyy').format(editOrderNavigationModel!.dateOfDelivery);
+        String tempFormattedDate = DateFormat('yyyy-MM-dd').format(editOrderNavigationModel!.dateOfDelivery);
         selectedDate = DateFormatter.convertStringIntoDateTime(tempFormattedDate);
         log('selectedDate => ${selectedDate}');
-        orderList = widget.editOrderNavigationModel!.orderList;
+        orderList = editOrderNavigationModel!.orderList;
         productList =
             dashboardController.productList.where((element) {
               return orderList.any((elementInner) => element.id == elementInner.productModel.id);
@@ -86,7 +91,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
           (controller) => Scaffold(
             backgroundColor: Colors.white,
             appBar: commonAppBar(
-              title: widget.editOrderNavigationModel != null ? 'Edit Order' : 'Add Order',
+              title: editOrderNavigationModel != null ? 'Edit Order' : 'Add Order',
               isDone: productList.isNotEmpty && orderList.isNotEmpty,
               onDone: () async {
                 if (partyNameController.text.isEmpty) {
@@ -109,12 +114,23 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                 if (productList.isNotEmpty && orderList.isNotEmpty) {
                   await selectDiscountAndPackingType(
                     context: context,
-                    orderList: orderList,
-                    partyName: partyNameController.text,
-                    dateOfDelivery: dateOfDeliveryController.text,
-                    editOrderNavigationModel: widget.editOrderNavigationModel,
-                    preselectedPackingType: widget.editOrderNavigationModel?.packagingType,
-                    preselectedDiscount: widget.editOrderNavigationModel?.discount,
+                    editOrderNavigationModel: EditOrderNavigationModel(
+                      orderID: editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null ? editOrderNavigationModel!.orderID! : null,
+                      partyName: partyNameController.text,
+                      dateOfDelivery: selectedDate != null ? selectedDate! : DateTime.now(),
+                      orderList: orderList,
+                      quantityList: quantityListController.map((e) => int.parse(e.text.toString())).toList(),
+                      packagingType: editOrderNavigationModel?.packagingType ?? PackingType.RegularPacking,
+                      discount: editOrderNavigationModel?.discount ?? 0,
+                      onAddEdit:
+                          editOrderNavigationModel != null
+                              ? editOrderNavigationModel!.onAddEdit
+                              : widget.arguments != null && widget.arguments is! EditOrderNavigationModel
+                              ? widget.arguments
+                              : () {},
+                    ),
+                    preselectedPackingType: editOrderNavigationModel?.packagingType,
+                    preselectedDiscount: editOrderNavigationModel?.discount,
                   );
                 }
               },

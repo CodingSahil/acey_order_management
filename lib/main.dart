@@ -8,10 +8,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 late final bool isIOS;
-
+late final PackageInfo packageInfo;
 void main() async {
   final GetStorage getStorage = GetStorage();
   await Supabase.initialize(
@@ -20,6 +21,7 @@ void main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1YWx5ZGJudWF3a25iYXNpdWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2MDMwODYsImV4cCI6MjA1OTE3OTA4Nn0.PUg_RNeLVjiNc18_6JWK-mFDYhL3nTFikjbBit2WD7s',
   );
   isIOS = GetPlatform.isIOS;
+  packageInfo = await PackageInfo.fromPlatform();
   WidgetsFlutterBinding.ensureInitialized();
   log(getStorage.getKeys().toString(), name: 'getKeys');
   var data = getStorage.read<String>(StorageKeys.userDetails);

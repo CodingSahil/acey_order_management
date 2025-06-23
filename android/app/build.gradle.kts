@@ -24,10 +24,11 @@ android {
         applicationId = "com.example.acey_order_management"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "2.0.2"
+        multiDexEnabled = true
     }
 
     buildTypes {

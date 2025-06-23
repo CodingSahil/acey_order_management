@@ -139,6 +139,8 @@ class _DashboardViewState extends State<DashboardView> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 12.h),
+                    Align(alignment: Alignment.center, child: Text('v${packageInfo.version}', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black, fontSize: 16))),
                   ],
                 );
               },

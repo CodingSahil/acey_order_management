@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:acey_order_management/controller/dashboard_controller.dart';
@@ -136,12 +137,14 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                           onSubmit: (orderListInner) {
                             List<OrderModel> orderListTemp = [];
                             for (var orderInner in orderListInner) {
-                              if (orderList.any((element) => element.productModel.id == orderInner.productModel.id)) {
+                              if (orderList.any((element) => element == orderInner)) {
                                 orderListTemp.add(orderList.firstWhere((element) => element.productModel.id == orderInner.productModel.id));
                               } else {
                                 orderListTemp.add(orderInner);
                               }
                             }
+                            log(orderListTemp.map((e) => jsonEncode(e.toJson())).toList().toString(), name: 'orderListTemp => ');
+
 
                             orderList = orderListTemp;
                             setState(() {});
@@ -295,6 +298,14 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                                 if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
                                                                   setQuantityState(() {
                                                                     order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) - 1}'));
+                                                                    orderList[index] = order;
+                                                                    // orderList = orderList.map((e) {
+                                                                    //   if(e.productModel.id == order.productModel.id) {
+                                                                    //     return order;
+                                                                    //   } else {
+                                                                    //     return e;
+                                                                    //   }
+                                                                    // }).toList();
                                                                     // orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
                                                                   });
                                                                 }
@@ -324,6 +335,14 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
 
                                                                     if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
                                                                       order = order.copyWith(quantityController: TextEditingController(text: order.quantityController.text));
+                                                                      orderList[index] = order;
+                                                                      // orderList = orderList.map((e) {
+                                                                      //   if(e.productModel.id == order.productModel.id) {
+                                                                      //     return order;
+                                                                      //   } else {
+                                                                      //     return e;
+                                                                      //   }
+                                                                      // }).toList();
                                                                       // orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
                                                                     }
                                                                   });
@@ -356,7 +375,14 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                               onTap: () {
                                                                 setQuantityState(() {
                                                                   order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) + 1}'));
-
+                                                                  orderList[index] = order;
+                                                                  // orderList = orderList.map((e) {
+                                                                  //   if(e.productModel.id == order.productModel.id) {
+                                                                  //     return order;
+                                                                  //   } else {
+                                                                  //     return e;
+                                                                  //   }
+                                                                  // }).toList();
                                                                   // order.quantityController.text = (int.parse(order.quantityController.text) + 1).toString();
                                                                   // orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
                                                                 });

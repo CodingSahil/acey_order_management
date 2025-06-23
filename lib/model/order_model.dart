@@ -162,7 +162,7 @@ class OrderModel extends Equatable {
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    return OrderModel(productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>), quantityController: TextEditingController(text: (json['quantity'] as int).toString()));
+    return OrderModel(productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>), quantityController: TextEditingController(text: (json['quantity']).toString()));
   }
 
   Map<String, dynamic> toJson() {

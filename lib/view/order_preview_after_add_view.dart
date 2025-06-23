@@ -65,14 +65,14 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
     log('OrderPreviewAfterAddView widget.editOrderNavigationModel != null ${editOrderNavigationModel != null}');
 
     if (editOrderNavigationModel != null && editOrderNavigationModel!.orderList.isNotEmpty) {
-      List<int> listOfQuantity = editOrderNavigationModel!.orderList.map((e) => e.quantity ?? 0).toList();
+      List<int> listOfQuantity = editOrderNavigationModel!.orderList.map((e) => int.parse(e.quantityController.text)).toList();
       totalQuantity = listOfQuantity.reduce((value, element) => value + element);
 
       /// total price
       totalPrice = editOrderNavigationModel!.orderList
           .map((e) {
             double price = e.productModel.mrp - ((e.productModel.mrp * editOrderNavigationModel!.discount) / 100);
-            return price * (e.quantity ?? 0);
+            return price * (int.parse(e.quantityController.text));
           })
           .toList()
           .reduce((value, element) => value + element);
@@ -129,9 +129,9 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
               sheet.getRangeByIndex(rowIndex, 3).setText(row.productModel.aeplPartNumber);
               sheet.getRangeByIndex(rowIndex, 4).setText(row.productModel.description);
               sheet.getRangeByIndex(rowIndex, 5).setNumber(row.productModel.mrp.toDouble());
-              sheet.getRangeByIndex(rowIndex, 6).setNumber(row.quantity?.toDouble() ?? 0);
+              sheet.getRangeByIndex(rowIndex, 6).setNumber(double.parse(row.quantityController.text).toDouble());
               double price = row.productModel.mrp - ((row.productModel.mrp * editOrderNavigationModel!.discount) / 100);
-              double totalPrice = price * (row.quantity ?? 0);
+              double totalPrice = price * (int.parse(row.quantityController.text));
               sheet.getRangeByIndex(rowIndex, 7).setNumber(price);
               sheet.getRangeByIndex(rowIndex, 8).setNumber(totalPrice);
               rowIndex++;
@@ -395,14 +395,14 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                               rows:
                                   editOrderNavigationModel!.orderList.map((order) {
                                     double price = order.productModel.mrp - ((order.productModel.mrp * editOrderNavigationModel!.discount) / 100);
-                                    double totalPrice = price * (order.quantity ?? 0);
+                                    double totalPrice = price * (double.parse(order.quantityController.text));
                                     log('price => $price & totalPrice => $totalPrice');
                                     return DataRow(
                                       cells: <DataCell>[
                                         DataCell(Text(order.productModel.referencePartNumber)),
                                         DataCell(Text(order.productModel.aeplPartNumber)),
                                         DataCell(Text(order.productModel.description)),
-                                        DataCell(Text(order.quantity?.toStringAsFixed(2) ?? '')),
+                                        DataCell(Text(double.parse(order.quantityController.text).toStringAsFixed(2))),
                                         DataCell(Text(order.productModel.mrp.toStringAsFixed(2))),
                                         DataCell(Text(price.toStringAsFixed(2))),
                                         DataCell(Text(totalPrice.toStringAsFixed(2))),

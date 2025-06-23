@@ -3,6 +3,7 @@ import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/enum.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 class OrderDetailsModel extends Equatable {
   const OrderDetailsModel({
@@ -152,22 +153,22 @@ class OrderDetailsModel extends Equatable {
 
 class OrderModel extends Equatable {
   final ProductModel productModel;
-  final int? quantity;
+  final TextEditingController quantityController;
 
-  const OrderModel({required this.productModel, this.quantity});
+  const OrderModel({required this.productModel, required this.quantityController});
 
-  OrderModel copyWith({ProductModel? productModel, int? quantity}) {
-    return OrderModel(productModel: productModel ?? this.productModel, quantity: quantity ?? this.quantity);
+  OrderModel copyWith({ProductModel? productModel, TextEditingController? quantityController}) {
+    return OrderModel(productModel: productModel ?? this.productModel, quantityController: quantityController ?? this.quantityController);
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    return OrderModel(productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>), quantity: json['quantity']);
+    return OrderModel(productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>), quantityController: TextEditingController(text: (json['quantity'] as int).toString()));
   }
 
   Map<String, dynamic> toJson() {
-    return {'productModel': productModel.toJson(), if (quantity != null) 'quantity': quantity};
+    return {'productModel': productModel.toJson(), if (quantityController.text.isNotEmpty) 'quantity': quantityController.text};
   }
 
   @override
-  List<Object?> get props => [productModel, quantity];
+  List<Object?> get props => [productModel, quantityController];
 }

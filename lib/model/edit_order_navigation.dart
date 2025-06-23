@@ -9,7 +9,6 @@ class EditOrderNavigationModel extends Equatable {
     required this.partyName,
     required this.dateOfDelivery,
     required this.orderList,
-    required this.quantityList,
     this.remainingUpdate,
     required this.packagingType,
     required this.discount,
@@ -20,12 +19,11 @@ class EditOrderNavigationModel extends Equatable {
   final String partyName;
   final DateTime dateOfDelivery;
   final List<OrderModel> orderList;
-  final List<int> quantityList;
   final num? remainingUpdate;
   final num discount;
   final PackingType packagingType;
   final void Function() onAddEdit;
 
   @override
-  List<Object?> get props => [orderID, partyName, dateOfDelivery, orderList, quantityList, remainingUpdate, discount, packagingType, onAddEdit];
+  List<Object?> get props => [orderID, partyName, dateOfDelivery, orderList, remainingUpdate, discount, packagingType, onAddEdit];
 }

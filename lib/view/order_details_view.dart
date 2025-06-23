@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:acey_order_management/model/order_model.dart';
@@ -120,14 +119,14 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
                     rows:
                         orderModelList.map((order) {
                           double price = order.productModel.mrp - ((order.productModel.mrp * widget.orderDetailsModel.discount) / 100);
-                          double totalPrice = price * (order.quantity ?? 0);
+                          double totalPrice = price * (int.tryParse(order.quantityController.text) ?? 0);
                           log('price => $price & totalPrice => $totalPrice');
                           return DataRow(
                             cells: <DataCell>[
                               DataCell(Text(order.productModel.referencePartNumber)),
                               DataCell(Text(order.productModel.aeplPartNumber)),
                               DataCell(Text(order.productModel.description)),
-                              DataCell(Text(order.quantity?.toStringAsFixed(2) ?? '')),
+                              DataCell(Text(int.parse(order.quantityController.text).toStringAsFixed(2) ?? '')),
                               DataCell(Text(order.productModel.mrp.toStringAsFixed(2))),
                               DataCell(Text(price.toStringAsFixed(2))),
                               DataCell(Text(totalPrice.toStringAsFixed(2))),

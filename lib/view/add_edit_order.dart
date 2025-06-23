@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/model/edit_order_navigation.dart';
 import 'package:acey_order_management/model/order_model.dart';
-import 'package:acey_order_management/model/product_model.dart';
 import 'package:acey_order_management/utils/app_bar.dart';
 import 'package:acey_order_management/utils/app_colors.dart';
 import 'package:acey_order_management/utils/custom_snack_bar.dart';
@@ -35,9 +34,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
   late TextEditingController dateOfDeliveryController = TextEditingController();
   DateTime? selectedDate;
   List<OrderModel> orderList = [];
-  List<ProductModel> productList = [];
   bool isError = false;
-  List<TextEditingController> quantityListController = [];
   EditOrderNavigationModel? editOrderNavigationModel;
 
   @override
@@ -57,23 +54,16 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
         dateOfDeliveryController.text = DateFormat('dd-MM-yyyy').format(editOrderNavigationModel!.dateOfDelivery);
         String tempFormattedDate = DateFormat('yyyy-MM-dd').format(editOrderNavigationModel!.dateOfDelivery);
         selectedDate = DateFormatter.convertStringIntoDateTime(tempFormattedDate);
-        log('selectedDate => ${selectedDate}');
-        orderList = editOrderNavigationModel!.orderList;
-        productList =
-            dashboardController.productList.where((element) {
-              return orderList.any((elementInner) => element.id == elementInner.productModel.id);
-            }).toList();
-        quantityListController = List.generate(orderList.length, (index) => TextEditingController(text: orderList[index].quantity?.toString() ?? '10'));
+        orderList = editOrderNavigationModel!.orderList.where((element) => dashboardController.productList.any((elementInner) => element.productModel.id == elementInner.id)).toList();
       } else {
         await productBottomSheet(
           context: context,
           dashboardController: dashboardController,
-          selectedProduct: productList,
-          onSubmit: (productListInner) {
-            productList = productListInner;
-            orderList = productList.map((product) => OrderModel(productModel: product)).toList();
-            quantityListController = List.generate(orderList.length, (index) => TextEditingController(text: orderList[index].quantity?.toString() ?? '10'));
-            orderList = orderList.map((e) => OrderModel(productModel: e.productModel, quantity: e.quantity != null ? e.quantity! : 10)).toList();
+          selectedOrder: orderList,
+          onSubmit: (orderListInner) {
+            setState(() {
+              orderList = orderListInner;
+            });
           },
         );
       }
@@ -92,7 +82,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
             backgroundColor: Colors.white,
             appBar: commonAppBar(
               title: editOrderNavigationModel != null ? 'Edit Order' : 'Add Order',
-              isDone: productList.isNotEmpty && orderList.isNotEmpty,
+              isDone: orderList.isNotEmpty,
               onDone: () async {
                 if (partyNameController.text.isEmpty) {
                   setState(() {
@@ -106,12 +96,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                   });
                   return;
                 }
-                if (orderList.isNotEmpty && orderList.any((element) => element.quantity == null || element.quantity == 0)) {
-                  log('orderList => ${orderList.map((e) => e.quantity)}');
+                if (orderList.isNotEmpty &&
+                    orderList.any((element) => element.quantityController.text.isEmpty || element.quantityController.text == '0' || (int.tryParse(element.quantityController.text) ?? 0) == 0)) {
                   errorSnackBar(context: context, title: "Some Product's might missing Quantity");
                   return;
                 }
-                if (productList.isNotEmpty && orderList.isNotEmpty) {
+                if (orderList.isNotEmpty) {
                   await selectDiscountAndPackingType(
                     context: context,
                     editOrderNavigationModel: EditOrderNavigationModel(
@@ -119,7 +109,6 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                       partyName: partyNameController.text,
                       dateOfDelivery: selectedDate != null ? selectedDate! : DateTime.now(),
                       orderList: orderList,
-                      quantityList: quantityListController.map((e) => int.parse(e.text.toString())).toList(),
                       packagingType: editOrderNavigationModel?.packagingType ?? PackingType.RegularPacking,
                       discount: editOrderNavigationModel?.discount ?? 0,
                       onAddEdit:
@@ -136,31 +125,25 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
               },
             ),
             floatingActionButton:
-                productList.isNotEmpty
+                orderList.isNotEmpty
                     ? FloatingActionButton.extended(
                       backgroundColor: Colors.blueAccent,
                       onPressed: () async {
                         await productBottomSheet(
                           context: context,
                           dashboardController: dashboardController,
-                          selectedProduct: productList,
-                          onSubmit: (productListInner) {
+                          selectedOrder: orderList,
+                          onSubmit: (orderListInner) {
                             List<OrderModel> orderListTemp = [];
-                            List<ProductModel> productListTemp =
-                                productListInner.map((e) {
-                                  if (productList.any((element) => element.id == e.id) && orderList.any((element) => element.productModel.id == e.id)) {
-                                    orderListTemp.add(orderList.firstWhere((element) => element.productModel.id == e.id));
-                                    return productList.singleWhere((element) => e.id == element.id);
-                                  } else {
-                                    orderListTemp.add(OrderModel(productModel: e));
-                                    return e;
-                                  }
-                                }).toList();
+                            for (var orderInner in orderListInner) {
+                              if (orderList.any((element) => element.productModel.id == orderInner.productModel.id)) {
+                                orderListTemp.add(orderList.firstWhere((element) => element.productModel.id == orderInner.productModel.id));
+                              } else {
+                                orderListTemp.add(orderInner);
+                              }
+                            }
 
-                            productList = productListTemp;
                             orderList = orderListTemp;
-                            quantityListController = List.generate(orderList.length, (index) => TextEditingController(text: orderList[index].quantity?.toString() ?? '10'));
-                            orderList = orderList.map((e) => OrderModel(productModel: e.productModel, quantity: e.quantity != null ? e.quantity! : 10)).toList();
                             setState(() {});
                           },
                         );
@@ -235,13 +218,13 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                             SizedBox(height: 12),
                             Divider(height: 1, color: Colors.black.withAlpha((255 * 0.5).toInt()), thickness: 0.5),
                             SizedBox(height: 16),
-                            productList.isNotEmpty
+                            orderList.isNotEmpty
                                 ? Expanded(
                                   child: ListView(
                                     padding: EdgeInsets.only(top: 8, bottom: MediaQuery.sizeOf(context).height * 0.1),
                                     children:
-                                        productList.map((product) {
-                                          int index = productList.indexOf(product);
+                                        orderList.map((order) {
+                                          int index = orderList.indexOf(order);
                                           return Container(
                                             decoration: BoxDecoration(color: AppColors.orderCardBackground, borderRadius: BorderRadius.circular(15)),
                                             margin: EdgeInsets.only(bottom: 8),
@@ -257,7 +240,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                     Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        HorizontalTitleValueComponent(title: 'AEPL Part Number', value: product.aeplPartNumber, valueFontSize: 14, valueFontWeight: FontWeight.w600),
+                                                        HorizontalTitleValueComponent(
+                                                          title: 'AEPL Part Number',
+                                                          value: order.productModel.aeplPartNumber,
+                                                          valueFontSize: 14,
+                                                          valueFontWeight: FontWeight.w600,
+                                                        ),
                                                         SizedBox(height: 2),
                                                       ],
                                                     ),
@@ -265,7 +253,6 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                       behavior: HitTestBehavior.translucent,
                                                       onTap: () {
                                                         setState(() {
-                                                          productList.removeAt(index);
                                                           orderList.removeAt(index);
                                                         });
                                                       },
@@ -276,7 +263,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                 HorizontalTitleValueComponent(
                                                   title: 'Reference Number',
                                                   isValueExpanded: true,
-                                                  value: product.referencePartNumber,
+                                                  value: order.productModel.referencePartNumber,
                                                   valueFontSize: 14,
                                                   valueFontWeight: FontWeight.w600,
                                                 ),
@@ -285,7 +272,7 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                 HorizontalTitleValueComponent(
                                                   title: 'Description',
                                                   isValueExpanded: true,
-                                                  value: product.description,
+                                                  value: order.productModel.description,
                                                   valueFontSize: 14,
                                                   valueFontWeight: FontWeight.w600,
                                                 ),
@@ -305,10 +292,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                             GestureDetector(
                                                               behavior: HitTestBehavior.translucent,
                                                               onTap: () {
-                                                                if (quantityListController[index].text.isNotEmpty && int.parse(quantityListController[index].text) > product.moq) {
+                                                                if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
                                                                   setQuantityState(() {
-                                                                    quantityListController[index].text = (int.parse(quantityListController[index].text) - 1).toString();
-                                                                    orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
+                                                                    order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) - 1}'));
+                                                                    // orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
                                                                   });
                                                                 }
                                                               },
@@ -325,18 +312,19 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                               width: MediaQuery.sizeOf(context).width * 0.2,
                                                               height: 35,
                                                               child: TextFormField(
-                                                                controller: quantityListController[index],
+                                                                controller: order.quantityController,
                                                                 cursorColor: Colors.black,
                                                                 cursorWidth: 1,
                                                                 textAlign: TextAlign.center,
                                                                 onChanged: (value) {
                                                                   setQuantityState(() {
                                                                     isError =
-                                                                        (quantityListController[index].text.isNotEmpty && int.parse(quantityListController[index].text) <= product.moq) ||
-                                                                        quantityListController[index].text.isEmpty;
+                                                                        (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) <= order.productModel.moq) ||
+                                                                        order.quantityController.text.isEmpty;
 
-                                                                    if (quantityListController[index].text.isNotEmpty && int.parse(quantityListController[index].text) > product.moq) {
-                                                                      orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
+                                                                    if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
+                                                                      order = order.copyWith(quantityController: TextEditingController(text: order.quantityController.text));
+                                                                      // orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
                                                                     }
                                                                   });
                                                                 },
@@ -367,8 +355,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                               behavior: HitTestBehavior.translucent,
                                                               onTap: () {
                                                                 setQuantityState(() {
-                                                                  quantityListController[index].text = (int.parse(quantityListController[index].text) + 1).toString();
-                                                                  orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
+                                                                  order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) + 1}'));
+
+                                                                  // order.quantityController.text = (int.parse(order.quantityController.text) + 1).toString();
+                                                                  // orderList[index] = orderList[index].copyWith(quantity: int.parse(quantityListController[index].text));
                                                                 });
                                                               },
                                                               child: Icon(Icons.add, color: Colors.black, size: 14),

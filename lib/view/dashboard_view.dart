@@ -168,15 +168,12 @@ class _DashboardViewState extends State<DashboardView> {
                                                       : [];
 
                                               bool deleteLoader = false;
+                                              bool isEditable = order.remainingUpdate != null && order.remainingUpdate! < 2;
 
                                               return GestureDetector(
                                                 behavior: HitTestBehavior.translucent,
                                                 onTap: () {
-                                                  if (order.remainingUpdate != null && order.remainingUpdate! <= 0) {
-                                                    errorSnackBar(context: context, title: "You can only Edit Twice");
-                                                  } else {
-                                                    Get.to(() => OrderDetailsView(orderDetailsModel: order));
-                                                  }
+                                                  Get.to(() => OrderDetailsView(orderDetailsModel: order));
                                                 },
                                                 child: Container(
                                                   padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
@@ -232,29 +229,37 @@ class _DashboardViewState extends State<DashboardView> {
                                                               GestureDetector(
                                                                 behavior: HitTestBehavior.translucent,
                                                                 onTap: () {
-                                                                  Get.to(
-                                                                    () => AddEditOrderView(
-                                                                      arguments: EditOrderNavigationModel(
-                                                                        orderID: order.id,
-                                                                        partyName: order.partyName,
-                                                                        dateOfDelivery: order.deliveryDate,
-                                                                        orderList: listOfOrderModel,
-                                                                        quantityList: listOfOrderModel.map((e) => e.quantity ?? 0).toList(),
-                                                                        remainingUpdate: order.remainingUpdate ?? 0,
-                                                                        discount: order.discount,
-                                                                        packagingType: order.packagingType,
-                                                                        onAddEdit: onAddEdit,
+                                                                  if (isEditable) {
+                                                                    Get.to(
+                                                                      () => AddEditOrderView(
+                                                                        arguments: EditOrderNavigationModel(
+                                                                          orderID: order.id,
+                                                                          partyName: order.partyName,
+                                                                          dateOfDelivery: order.deliveryDate,
+                                                                          orderList: listOfOrderModel,
+                                                                          remainingUpdate: order.remainingUpdate ?? 0,
+                                                                          discount: order.discount,
+                                                                          packagingType: order.packagingType,
+                                                                          onAddEdit: onAddEdit,
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  );
+                                                                    );
+                                                                  }
                                                                 },
                                                                 child: Padding(
                                                                   padding: EdgeInsets.symmetric(vertical: 8.h),
                                                                   child: Row(
                                                                     children: [
-                                                                      Icon(Icons.edit, size: 14, color: Colors.black),
+                                                                      Icon(Icons.edit, size: 14, color: isEditable ? Colors.black : Colors.black.withAlpha((255 * 0.3).toInt())),
                                                                       SizedBox(width: 6.w),
-                                                                      Text('Edit', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 12)),
+                                                                      Text(
+                                                                        'Edit',
+                                                                        style: TextStyle(
+                                                                          color: isEditable ? Colors.black : Colors.black.withAlpha((255 * 0.3).toInt()),
+                                                                          fontWeight: FontWeight.w600,
+                                                                          fontSize: 12,
+                                                                        ),
+                                                                      ),
                                                                     ],
                                                                   ),
                                                                 ),

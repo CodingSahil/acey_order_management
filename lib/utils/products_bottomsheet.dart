@@ -50,7 +50,22 @@ Future<void> productBottomSheet({
                       onChanged: (value) {
                         setBottomSheetState(() {
                           if (dashboardController.productList.isNotEmpty && value.isNotEmpty) {
-                            searchedOrderList = selectedOrder.where((element) => element.productModel.aeplPartNumber.toLowerCase().contains(value.toLowerCase())).toList();
+                            searchedOrderList =
+                                (selectedOrder.isNotEmpty
+                                        ? selectedOrder
+                                        : dashboardController.productList
+                                            .map(
+                                              (e) => OrderModel(
+                                                productModel: e,
+                                                quantityController: TextEditingController(
+                                                  text: selectedOrderListLocal.firstWhereOrNull((element) => element.productModel.id == e.id)?.quantityController.text ?? '10',
+                                                ),
+                                              ),
+                                            )
+                                            .toList())
+                                    .where((element) => element.productModel.aeplPartNumber.toLowerCase().contains(value.toLowerCase()))
+                                    .toList();
+
                             // dashboardController.productList.where((element) => element.aeplPartNumber.toLowerCase().contains(value.toLowerCase())).toList();
                           }
                         });

@@ -1,14 +1,15 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/main.dart';
 import 'package:acey_order_management/model/edit_order_navigation.dart';
 import 'package:acey_order_management/model/order_model.dart';
+import 'package:acey_order_management/utils/app_colors.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/order_preview_after_add_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -27,11 +28,12 @@ Future<void> productBottomSheet({
   await showModalBottomSheet(
     context: context,
     backgroundColor: Colors.white,
-    enableDrag: selectedOrderListLocal.isNotEmpty,
+    // enableDrag: selectedOrderListLocal.isNotEmpty,
+    enableDrag: false,
     isDismissible: false,
-    scrollControlDisabledMaxHeightRatio: 0.9,
-    sheetAnimationStyle: AnimationStyle(curve: Curves.easeIn, duration: Duration(milliseconds: 600), reverseCurve: Curves.easeIn, reverseDuration: Duration(milliseconds: 400)),
     showDragHandle: true,
+    scrollControlDisabledMaxHeightRatio: 0.96,
+    sheetAnimationStyle: AnimationStyle(curve: Curves.easeIn, duration: Duration(milliseconds: 600), reverseCurve: Curves.easeIn, reverseDuration: Duration(milliseconds: 400)),
     builder:
         (context) => StatefulBuilder(
           builder:
@@ -51,18 +53,16 @@ Future<void> productBottomSheet({
                         setBottomSheetState(() {
                           if (dashboardController.productList.isNotEmpty && value.isNotEmpty) {
                             searchedOrderList =
-                                (selectedOrder.isNotEmpty
-                                        ? selectedOrder
-                                        : dashboardController.productList
-                                            .map(
-                                              (e) => OrderModel(
-                                                productModel: e,
-                                                quantityController: TextEditingController(
-                                                  text: selectedOrderListLocal.firstWhereOrNull((element) => element.productModel.id == e.id)?.quantityController.text ?? '10',
-                                                ),
-                                              ),
-                                            )
-                                            .toList())
+                                (dashboardController.productList
+                                        .map(
+                                          (e) => OrderModel(
+                                            productModel: e,
+                                            quantityController: TextEditingController(
+                                              text: selectedOrderListLocal.firstWhereOrNull((element) => element.productModel.id == e.id)?.quantityController.text ?? '10',
+                                            ),
+                                          ),
+                                        )
+                                        .toList())
                                     .where((element) => element.productModel.aeplPartNumber.toLowerCase().contains(value.toLowerCase()))
                                     .toList();
 
@@ -89,7 +89,103 @@ Future<void> productBottomSheet({
                     //   },
                     // ),
                   ),
-                  SizedBox(height: 12),
+                  if (selectedOrderListLocal.isNotEmpty) ...[
+                    SizedBox(height: 10),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.2),
+                      child: SingleChildScrollView(
+                        physics: AlwaysScrollableScrollPhysics(),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          direction: Axis.horizontal,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 6,
+                          children:
+                              selectedOrderListLocal.map((e) {
+                                return GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onLongPress: () async {
+                                    await showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            alignment: Alignment.center,
+                                            backgroundColor: Colors.white,
+                                            title: Text('Product Details', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              spacing: 15,
+                                              children: [
+                                                HorizontalTitleValueComponent(
+                                                  title: 'AEPL Part Number',
+                                                  value: e.productModel.aeplPartNumber,
+                                                  titleFontWeight: FontWeight.w600,
+                                                  valueFontWeight: FontWeight.w700,
+                                                  valueFontSize: 14,
+                                                  titleFontSize: 14,
+                                                  isValueExpanded: true,
+                                                ),
+                                                HorizontalTitleValueComponent(
+                                                  title: 'Reference Part Number',
+                                                  value: e.productModel.referencePartNumber,
+                                                  titleFontWeight: FontWeight.w600,
+                                                  valueFontWeight: FontWeight.w700,
+                                                  valueFontSize: 14,
+                                                  titleFontSize: 14,
+                                                  isValueExpanded: true,
+                                                ),
+                                                HorizontalTitleValueComponent(
+                                                  title: 'Description',
+                                                  value: e.productModel.description,
+                                                  titleFontWeight: FontWeight.w600,
+                                                  valueFontWeight: FontWeight.w700,
+                                                  valueFontSize: 14,
+                                                  titleFontSize: 14,
+                                                  isValueExpanded: true,
+                                                ),
+                                                HorizontalTitleValueComponent(
+                                                  title: 'MRP',
+                                                  value: e.productModel.mrp.toString(),
+                                                  titleFontWeight: FontWeight.w600,
+                                                  valueFontWeight: FontWeight.w700,
+                                                  valueFontSize: 14,
+                                                  titleFontSize: 14,
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: Colors.black)))],
+                                          ),
+                                    );
+                                  },
+                                  onTap: () {},
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                    margin: EdgeInsets.only(bottom: 6),
+                                    decoration: BoxDecoration(color: AppColors.primaryColor, borderRadius: BorderRadius.circular(15.r)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(e.productModel.aeplPartNumber, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                                        SizedBox(width: 8),
+                                        GestureDetector(
+                                          behavior: HitTestBehavior.translucent,
+                                          onTap: () {
+                                            setBottomSheetState(() {
+                                              selectedOrderListLocal.removeWhere((element) => element.productModel.id == e.productModel.id);
+                                            });
+                                          },
+                                          child: Icon(Icons.cancel, color: Colors.white, size: 16),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 10),
                   if ((searchController.text.isNotEmpty && searchedOrderList.isEmpty) || dashboardController.productList.isEmpty)
                     Expanded(child: Center(child: Text('No Data', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black))))
                   else
@@ -338,16 +434,13 @@ Future<void> productBottomSheet({
                                                   materialTapTargetSize: MaterialTapTargetSize.padded,
                                                   value: selectedOrderListLocal.any((element) => element.productModel.aeplPartNumber == order.productModel.aeplPartNumber),
                                                   onChanged: (value) {
-                                                    setCheckBoxState(() {
-                                                      if (value != null && value == true) {
-                                                        selectedOrderListLocal.add(order);
-                                                      } else if (value != null && value == false) {
-                                                        selectedOrderListLocal.remove(order);
+                                                    setBottomSheetState(() {
+                                                      if (selectedOrderListLocal.any((element) => element.productModel.id == order.productModel.id)) {
+                                                        selectedOrderListLocal.removeWhere((element) => element.productModel.id == order.productModel.id);
                                                       } else {
-                                                        log('message');
+                                                        selectedOrderListLocal.add(order);
                                                       }
                                                     });
-                                                    setBottomSheetState(() {});
                                                   },
                                                 ),
                                           ),

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:acey_order_management/controller/dashboard_controller.dart';
 import 'package:acey_order_management/controller/order_preview_after_add_controller.dart';
 import 'package:acey_order_management/main.dart';
@@ -8,9 +7,9 @@ import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/model/user_model.dart';
 import 'package:acey_order_management/utils/app_bar.dart';
 import 'package:acey_order_management/utils/app_colors.dart';
-import 'package:acey_order_management/utils/custom_snack_bar.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/loader.dart';
+import 'package:acey_order_management/utils/routes/routes.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/login_view.dart';
@@ -104,10 +103,34 @@ class _DashboardViewState extends State<DashboardView> {
                           Text(userModel!.email, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
                           SizedBox(height: 18.h),
                           Divider(color: Colors.black.withAlpha((255 * 0.4).toInt()), height: 1, thickness: 0.5),
-                          SizedBox(height: 18.h),
-                          SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
+                          SizedBox(height: 30.h),
+                          // SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
                         ],
                       ),
+                    GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Get.toNamed(Routes.salesRepresentationView);
+                      },
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person, size: 20, color: Colors.black),
+                          SizedBox(width: 30.w),
+                          Text(
+                            'Sales Representative',
+                            style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 14),
+                          ),
+                          Spacer(),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 15,
+                            color: Colors.black.withAlpha((255 * 0.5).toInt()),
+                          ),
+                        ],
+                      ),
+                    ),
                     Spacer(),
                     GestureDetector(
                       behavior: HitTestBehavior.translucent,
@@ -131,7 +154,10 @@ class _DashboardViewState extends State<DashboardView> {
                                   : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text('Log Out', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
+                                      Text(
+                                        'Log Out',
+                                        style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+                                      ),
                                       SizedBox(width: 16.w),
                                       Icon(Icons.logout, color: Colors.white, size: 40.h),
                                     ],
@@ -140,7 +166,13 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
                     SizedBox(height: 12.h),
-                    Align(alignment: Alignment.center, child: Text('v${packageInfo.version}', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black, fontSize: 16))),
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'v${packageInfo.version}',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black, fontSize: 16),
+                      ),
+                    ),
                   ],
                 );
               },
@@ -163,14 +195,30 @@ class _DashboardViewState extends State<DashboardView> {
                                     Expanded(
                                       child: ListView(
                                         children:
-                                            controller.orderDetailsList.where((element) => element.deletedAt == null).map((order) {
+                                            controller.orderDetailsList.where((element) => element.deletedAt == null).map((
+                                              order,
+                                            ) {
                                               List<OrderModel> listOfOrderModel =
-                                                  order.orderDetails['orderDetails'] != null && order.orderDetails['orderDetails'] is List && (order.orderDetails['orderDetails'] as List).isNotEmpty
-                                                      ? (order.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList()
+                                                  order.orderDetails['orderDetails'] != null &&
+                                                          order.orderDetails['orderDetails'] is List &&
+                                                          (order.orderDetails['orderDetails'] as List).isNotEmpty
+                                                      ? (order.orderDetails['orderDetails'] as List)
+                                                          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+                                                          .toList()
                                                       : [];
 
+                                              int index = controller.orderDetailsList
+                                                  .where((element) => element.deletedAt == null)
+                                                  .toList()
+                                                  .indexOf(order);
                                               bool deleteLoader = false;
                                               bool isEditable = order.remainingUpdate != null && order.remainingUpdate! < 2;
+                                              bool isLast =
+                                                  controller.orderDetailsList
+                                                          .where((element) => element.deletedAt == null)
+                                                          .length -
+                                                      1 ==
+                                                  index;
 
                                               return GestureDetector(
                                                 behavior: HitTestBehavior.translucent,
@@ -179,7 +227,7 @@ class _DashboardViewState extends State<DashboardView> {
                                                 },
                                                 child: Container(
                                                   padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 24.w),
-                                                  margin: EdgeInsets.only(bottom: 24.h),
+                                                  margin: EdgeInsets.only(bottom: (isLast ? 110.h : 0) + 24.h),
                                                   decoration: BoxDecoration(
                                                     color: AppColors.orderCardBackground,
                                                     border: Border.all(color: Colors.black.withAlpha((255 * 0.2).toInt())),
@@ -193,18 +241,38 @@ class _DashboardViewState extends State<DashboardView> {
                                                       Row(
                                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                         children: [
-                                                          VerticalTitleValueComponent(title: 'ID', value: order.id.toString()),
+                                                          VerticalTitleValueComponent(
+                                                            title: 'ID',
+                                                            value: order.id.toString(),
+                                                          ),
                                                           if (order.createdAt != null)
-                                                            VerticalTitleValueComponent(title: 'Created At', value: DateFormatter.convertTimeStampIntoString(order.createdAt!), isEnd: true),
+                                                            VerticalTitleValueComponent(
+                                                              title: 'Created At',
+                                                              value: DateFormatter.convertTimeStampIntoString(
+                                                                order.createdAt!,
+                                                              ),
+                                                              isEnd: true,
+                                                            ),
                                                         ],
                                                       ),
                                                       SizedBox(height: 12.h),
                                                       Row(
                                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                         children: [
-                                                          VerticalTitleValueComponent(title: 'Party Name', value: order.partyName),
-                                                          VerticalTitleValueComponent(title: 'Delivery Date', value: DateFormat('dd-MM-yyyy').format(order.deliveryDate), isCenter: true),
-                                                          VerticalTitleValueComponent(title: 'Number Of Items', value: order.numberOfItems.toString(), isEnd: true),
+                                                          VerticalTitleValueComponent(
+                                                            title: 'Party Name',
+                                                            value: order.partyName,
+                                                          ),
+                                                          VerticalTitleValueComponent(
+                                                            title: 'Delivery Date',
+                                                            value: DateFormat('dd-MM-yyyy').format(order.deliveryDate),
+                                                            isCenter: true,
+                                                          ),
+                                                          VerticalTitleValueComponent(
+                                                            title: 'Number Of Items',
+                                                            value: order.numberOfItems.toString(),
+                                                            isEnd: true,
+                                                          ),
                                                         ],
                                                       ),
                                                       SizedBox(height: 12.h),
@@ -215,13 +283,25 @@ class _DashboardViewState extends State<DashboardView> {
                                                           Column(
                                                             crossAxisAlignment: CrossAxisAlignment.start,
                                                             children: [
-                                                              HorizontalTitleValueComponent(title: 'Total Quantity', value: order.totalQuantity.toString()),
+                                                              HorizontalTitleValueComponent(
+                                                                title: 'Total Quantity',
+                                                                value: order.totalQuantity.toString(),
+                                                              ),
                                                               SizedBox(height: 12.h),
-                                                              HorizontalTitleValueComponent(title: 'Total Price', value: order.totalPrice.toString()),
+                                                              HorizontalTitleValueComponent(
+                                                                title: 'Total Price',
+                                                                value: order.totalPrice.toString(),
+                                                              ),
                                                               SizedBox(height: 12.h),
-                                                              HorizontalTitleValueComponent(title: 'GST Amount', value: order.gstAmount.toString()),
+                                                              HorizontalTitleValueComponent(
+                                                                title: 'GST Amount',
+                                                                value: order.gstAmount.toString(),
+                                                              ),
                                                               SizedBox(height: 12.h),
-                                                              HorizontalTitleValueComponent(title: 'Grand Total', value: order.grandTotal.toString()),
+                                                              HorizontalTitleValueComponent(
+                                                                title: 'Grand Total',
+                                                                value: order.grandTotal.toString(),
+                                                              ),
                                                             ],
                                                           ),
                                                           Column(
@@ -252,12 +332,26 @@ class _DashboardViewState extends State<DashboardView> {
                                                                   padding: EdgeInsets.symmetric(vertical: 8.h),
                                                                   child: Row(
                                                                     children: [
-                                                                      Icon(Icons.edit, size: 14, color: isEditable ? Colors.black : Colors.black.withAlpha((255 * 0.3).toInt())),
+                                                                      Icon(
+                                                                        Icons.edit,
+                                                                        size: 14,
+                                                                        color:
+                                                                            isEditable
+                                                                                ? Colors.black
+                                                                                : Colors.black.withAlpha(
+                                                                                  (255 * 0.3).toInt(),
+                                                                                ),
+                                                                      ),
                                                                       SizedBox(width: 6.w),
                                                                       Text(
                                                                         'Edit',
                                                                         style: TextStyle(
-                                                                          color: isEditable ? Colors.black : Colors.black.withAlpha((255 * 0.3).toInt()),
+                                                                          color:
+                                                                              isEditable
+                                                                                  ? Colors.black
+                                                                                  : Colors.black.withAlpha(
+                                                                                    (255 * 0.3).toInt(),
+                                                                                  ),
                                                                           fontWeight: FontWeight.w600,
                                                                           fontSize: 12,
                                                                         ),
@@ -288,9 +382,20 @@ class _DashboardViewState extends State<DashboardView> {
                                                                                 padding: EdgeInsets.symmetric(vertical: 8.h),
                                                                                 child: Row(
                                                                                   children: [
-                                                                                    Icon(Icons.delete, size: 14, color: Colors.red),
+                                                                                    Icon(
+                                                                                      Icons.delete,
+                                                                                      size: 14,
+                                                                                      color: Colors.red,
+                                                                                    ),
                                                                                     SizedBox(width: 6.w),
-                                                                                    Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600, fontSize: 12)),
+                                                                                    Text(
+                                                                                      'Delete',
+                                                                                      style: TextStyle(
+                                                                                        color: Colors.red,
+                                                                                        fontWeight: FontWeight.w600,
+                                                                                        fontSize: 12,
+                                                                                      ),
+                                                                                    ),
                                                                                   ],
                                                                                 ),
                                                                               ),
@@ -322,14 +427,20 @@ class _DashboardViewState extends State<DashboardView> {
                                   },
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(16)),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blueAccent,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.add, color: Colors.white),
                                         SizedBox(width: 12),
-                                        Text('Add Order', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+                                        Text(
+                                          'Add Order',
+                                          style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                                        ),
                                       ],
                                     ),
                                   ),

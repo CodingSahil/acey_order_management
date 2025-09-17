@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'app_colors.dart';
+import 'image_path.dart';
 
 class AppTextFormFieldsWithLabel extends StatefulWidget {
   const AppTextFormFieldsWithLabel({
@@ -12,6 +16,7 @@ class AppTextFormFieldsWithLabel extends StatefulWidget {
     required this.onFieldSubmitted,
     this.isPasswordField = false,
     this.errorMessage,
+    this.textInputType,
   });
 
   final TextEditingController textEditingController;
@@ -19,6 +24,7 @@ class AppTextFormFieldsWithLabel extends StatefulWidget {
   final String? errorMessage;
   final bool isError;
   final bool isPasswordField;
+  final TextInputType? textInputType;
   final void Function(String value) onChanged;
   final void Function(String value) onFieldSubmitted;
 
@@ -33,7 +39,10 @@ class _AppTextFormFieldsWithLabelState extends State<AppTextFormFieldsWithLabel>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(padding: EdgeInsets.only(left: 10), child: Text(widget.hintText, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 16))),
+        Padding(
+          padding: EdgeInsets.only(left: 10),
+          child: Text(widget.hintText, style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 16)),
+        ),
         SizedBox(height: 6),
         LabeledTextFormField(
           controller: widget.textEditingController,
@@ -43,6 +52,7 @@ class _AppTextFormFieldsWithLabelState extends State<AppTextFormFieldsWithLabel>
           isPasswordField: widget.isPasswordField,
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onFieldSubmitted,
+          textInputType: widget.textInputType ?? TextInputType.text,
         ),
       ],
     );
@@ -131,7 +141,10 @@ class _LabeledTextFormFieldState extends State<LabeledTextFormField> {
       onEditingComplete: widget.onEditingComplete,
       inputFormatters:
           widget.isAmountField
-              ? <TextInputFormatter>[LengthLimitingTextInputFormatter(8), FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))]
+              ? <TextInputFormatter>[
+                LengthLimitingTextInputFormatter(8),
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+              ]
               : widget.textInputType == TextInputType.emailAddress
               ? <TextInputFormatter>[AllLowerCaseCaseTextFormatter()]
               : widget.textInputType == TextInputType.phone
@@ -140,12 +153,19 @@ class _LabeledTextFormFieldState extends State<LabeledTextFormField> {
               ? <TextInputFormatter>[NormalCaseTextFormatter()]
               : <TextInputFormatter>[UpperCaseTextFormatter()],
       onTap: widget.onTap,
-      style: GoogleFonts.rubik(fontWeight: FontWeight.normal, fontSize: 15, color: widget.showRedTextColor ? Colors.red : Colors.black),
+      style: GoogleFonts.rubik(
+        fontWeight: FontWeight.normal,
+        fontSize: 15,
+        color: widget.showRedTextColor ? Colors.red : Colors.black,
+      ),
       decoration: InputDecoration(
         contentPadding: widget.contentPadding,
         filled: !widget.enable,
         fillColor: Colors.transparent,
-        labelText: widget.labelText != null && widget.labelText!.isNotEmpty ? '${widget.labelText} ${widget.isOptionalFields ? '(Optional)' : ''}' : null,
+        labelText:
+            widget.labelText != null && widget.labelText!.isNotEmpty
+                ? '${widget.labelText} ${widget.isOptionalFields ? '(Optional)' : ''}'
+                : null,
         hintText: widget.hintText,
         errorText: widget.isError ? widget.errorMessage ?? '${widget.hintText} is required' : null,
         errorMaxLines: 5,
@@ -153,69 +173,47 @@ class _LabeledTextFormFieldState extends State<LabeledTextFormField> {
         prefixText: widget.isCurrencyBeforeText ? '₹ ' : null,
         prefixStyle: TextStyle(color: widget.showRedTextColor ? Colors.red : Colors.black.withAlpha((255 * 0.5).toInt())),
         labelStyle: GoogleFonts.rubik(fontWeight: FontWeight.normal, fontSize: 15, color: Colors.black),
-        hintStyle: GoogleFonts.rubik(fontWeight: FontWeight.normal, fontSize: 15, color: Colors.black.withAlpha((255 * 0.5).toInt())),
-        suffixIcon: widget.suffix,
-        //     : widget.isCancel
-        //     ? GestureDetector(
-        //   behavior: HitTestBehavior.translucent,
-        //   onTap: widget.onClose,
-        //   child: Icon(
-        //     Icons.cancel,
-        //     color: Colors.red,
-        //     size: 28,
-        //   ),
-        // )
-        //     : widget.isPasswordField
-        //     ? GestureDetector(
-        //   behavior: HitTestBehavior.translucent,
-        //   onTap: () {
-        //     setState(() => isEyeOpen = !isEyeOpen);
-        //   },
-        //   child: isEyeOpen
-        //       ? Container(
-        //     padding: EdgeInsets.symmetric(
-        //       vertical: Dimens.height24,
-        //       horizontal: Dimens.width8,
-        //     ),
-        //     height: Dimens.height30,
-        //     width: Dimens.width30,
-        //     child: SvgPicture.asset(
-        //       AssetsPaths.eyeOpenSVG,
-        //       // height: Dimens.height24,
-        //       // width: Dimens.width24,
-        //       colorFilter: ColorFilter.mode(
-        //         AppColors.black.withAlpha(
-        //           (255 * 0.75).toInt(),
-        //         ),
-        //         BlendMode.srcIn,
-        //       ),
-        //     ),
-        //   )
-        //       : Container(
-        //     padding: EdgeInsets.symmetric(
-        //       vertical: Dimens.height24,
-        //       horizontal: Dimens.width8,
-        //     ),
-        //     height: Dimens.height30,
-        //     width: Dimens.width30,
-        //     child: SvgPicture.asset(
-        //       AssetsPaths.eyeCloseSVG,
-        //       // height: Dimens.height24,
-        //       // width: Dimens.width24,
-        //       colorFilter: ColorFilter.mode(
-        //         AppColors.black.withAlpha(
-        //           (255 * 0.75).toInt(),
-        //         ),
-        //         BlendMode.srcIn,
-        //       ),
-        //     ),
-        //   ),
-        // )
-        //     : null,
+        hintStyle: GoogleFonts.rubik(
+          fontWeight: FontWeight.normal,
+          fontSize: 15,
+          color: Colors.black.withAlpha((255 * 0.5).toInt()),
+        ),
+        suffixIcon:
+            widget.isPasswordField
+                ?
+                //     : widget.isCancel
+                //     ? GestureDetector(
+                //   behavior: HitTestBehavior.translucent,
+                //   onTap: widget.onClose,
+                //   child: Icon(
+                //     Icons.cancel,
+                //     color: Colors.red,
+                //     size: 28,
+                //   ),
+                // )
+                //     : widget.isPasswordField
+                //     ?
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    setState(() => isEyeOpen = !isEyeOpen);
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12,vertical: 12),
+                    child: SvgPicture.asset(
+                      isEyeOpen ? SvgPath.eyeOpen : SvgPath.eyeClose,
+                      colorFilter: ColorFilter.mode(AppColors.black.withAlpha((255 * 0.75).toInt()), BlendMode.srcIn),
+                    ),
+                  ),
+                )
+                : widget.suffix,
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: widget.showBorder ? Colors.blueAccent : Colors.transparent, width: widget.showBorder ? 1 : 0),
+          borderSide: BorderSide(
+            color: widget.showBorder ? Colors.blueAccent : Colors.transparent,
+            width: widget.showBorder ? 1 : 0,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
@@ -230,8 +228,14 @@ class _LabeledTextFormFieldState extends State<LabeledTextFormField> {
           ),
         ),
         disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.red, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: Colors.red, width: 1),
+        ),
       ),
     );
   }

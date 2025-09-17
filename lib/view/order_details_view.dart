@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
-import '../utils/products_bottomsheet.dart';
+import '../utils/bottomsheet/products_bottomsheet.dart';
 import 'add_edit_order.dart';
 
 class OrderDetailsView extends StatefulWidget {
@@ -126,7 +126,7 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
                               DataCell(Text(order.productModel.referencePartNumber)),
                               DataCell(Text(order.productModel.aeplPartNumber)),
                               DataCell(Text(order.productModel.description)),
-                              DataCell(Text(int.parse(order.quantityController.text).toStringAsFixed(2) ?? '')),
+                              DataCell(Text(int.parse(order.quantityController.text).toStringAsFixed(2))),
                               DataCell(Text(order.productModel.mrp.toStringAsFixed(2))),
                               DataCell(Text(price.toStringAsFixed(2))),
                               DataCell(Text(totalPrice.toStringAsFixed(2))),

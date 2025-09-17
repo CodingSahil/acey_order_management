@@ -13,6 +13,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 late final bool isIOS;
 late final PackageInfo packageInfo;
+final passwordRegExp = RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).*$');
+
 void main() async {
   final GetStorage getStorage = GetStorage();
   await Supabase.initialize(
@@ -41,7 +43,12 @@ class MyApp extends StatelessWidget {
       designSize: const Size(720, 1520),
       builder: (context, child) {
         SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-        return GetMaterialApp(debugShowCheckedModeBanner: false, title: 'ACEY App', initialBinding: StoreBinding(), onGenerateRoute: onGenerateRoute);
+        return GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'ACEY App',
+          initialBinding: StoreBinding(),
+          onGenerateRoute: onGenerateRoute,
+        );
       },
     );
   }

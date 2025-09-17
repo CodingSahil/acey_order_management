@@ -13,8 +13,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'enum.dart';
-import 'label_text_fields.dart';
+import '../enum.dart';
+import '../label_text_fields.dart';
 
 Future<void> productBottomSheet({
   required BuildContext context,
@@ -403,6 +403,7 @@ Future<void> productBottomSheet({
                                                           behavior: HitTestBehavior.translucent,
                                                           onTap: () {
                                                             setBottomSheetState(() {
+                                                              print(isError);
                                                               order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) + 1}'));
                                                               selectedOrderListLocal =
                                                                   selectedOrderListLocal.map((e) {

@@ -11,7 +11,7 @@ import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/enum.dart';
 import 'package:acey_order_management/utils/label_text_fields.dart';
 import 'package:acey_order_management/utils/loader.dart';
-import 'package:acey_order_management/utils/products_bottomsheet.dart';
+import 'package:acey_order_management/utils/bottomsheet/products_bottomsheet.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +55,13 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
         dateOfDeliveryController.text = DateFormat('dd-MM-yyyy').format(editOrderNavigationModel!.dateOfDelivery);
         String tempFormattedDate = DateFormat('yyyy-MM-dd').format(editOrderNavigationModel!.dateOfDelivery);
         selectedDate = DateFormatter.convertStringIntoDateTime(tempFormattedDate);
-        orderList = editOrderNavigationModel!.orderList.where((element) => dashboardController.productList.any((elementInner) => element.productModel.id == elementInner.id)).toList();
+        orderList =
+            editOrderNavigationModel!.orderList
+                .where(
+                  (element) =>
+                      dashboardController.productList.any((elementInner) => element.productModel.id == elementInner.id),
+                )
+                .toList();
       } else {
         await productBottomSheet(
           context: context,
@@ -98,7 +104,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                   return;
                 }
                 if (orderList.isNotEmpty &&
-                    orderList.any((element) => element.quantityController.text.isEmpty || element.quantityController.text == '0' || (int.tryParse(element.quantityController.text) ?? 0) == 0)) {
+                    orderList.any(
+                      (element) =>
+                          element.quantityController.text.isEmpty ||
+                          element.quantityController.text == '0' ||
+                          (int.tryParse(element.quantityController.text) ?? 0) == 0,
+                    )) {
                   errorSnackBar(context: context, title: "Some Product's might missing Quantity");
                   return;
                 }
@@ -106,7 +117,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                   await selectDiscountAndPackingType(
                     context: context,
                     editOrderNavigationModel: EditOrderNavigationModel(
-                      orderID: editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null ? editOrderNavigationModel!.orderID! : null,
+                      orderID:
+                          editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null
+                              ? editOrderNavigationModel!.orderID!
+                              : null,
                       partyName: partyNameController.text,
                       dateOfDelivery: selectedDate != null ? selectedDate! : DateTime.now(),
                       orderList: orderList,
@@ -138,13 +152,17 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                             List<OrderModel> orderListTemp = [];
                             for (var orderInner in orderListInner) {
                               if (orderList.any((element) => element == orderInner)) {
-                                orderListTemp.add(orderList.firstWhere((element) => element.productModel.id == orderInner.productModel.id));
+                                orderListTemp.add(
+                                  orderList.firstWhere((element) => element.productModel.id == orderInner.productModel.id),
+                                );
                               } else {
                                 orderListTemp.add(orderInner);
                               }
                             }
-                            log(orderListTemp.map((e) => jsonEncode(e.toJson())).toList().toString(), name: 'orderListTemp => ');
-
+                            log(
+                              orderListTemp.map((e) => jsonEncode(e.toJson())).toList().toString(),
+                              name: 'orderListTemp => ',
+                            );
 
                             orderList = orderListTemp;
                             setState(() {});
@@ -152,7 +170,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                         );
                       },
                       icon: Icon(Icons.add, color: Colors.white, size: 22),
-                      label: Text('Add Product', style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
+                      label: Text(
+                        'Add Product',
+                        style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
                     )
                     : null,
             body: Obx(
@@ -169,9 +190,19 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Padding(padding: EdgeInsets.only(left: 4), child: Text('Enter Party Name', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14))),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 4),
+                                    child: Text(
+                                      'Enter Party Name',
+                                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14),
+                                    ),
+                                  ),
                                   SizedBox(height: 8),
-                                  LabeledTextFormField(controller: partyNameController, hintText: 'Enter Party Name', isError: isError && partyNameController.text.isEmpty),
+                                  LabeledTextFormField(
+                                    controller: partyNameController,
+                                    hintText: 'Enter Party Name',
+                                    isError: isError && partyNameController.text.isEmpty,
+                                  ),
                                 ],
                               ),
                             ),
@@ -200,18 +231,31 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Padding(padding: EdgeInsets.only(left: 4), child: Text('Select Order Date', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14))),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 4),
+                                      child: Text(
+                                        'Select Order Date',
+                                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 14),
+                                      ),
+                                    ),
                                     SizedBox(height: 8),
                                     DecoratedBox(
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(15),
-                                        border: Border.all(width: 0.5, color: isError ? Colors.red : Colors.black.withAlpha((255 * 0.5).toInt())),
+                                        border: Border.all(
+                                          width: 0.5,
+                                          color: isError ? Colors.red : Colors.black.withAlpha((255 * 0.5).toInt()),
+                                        ),
                                       ),
                                       child: LabeledTextFormField(
                                         controller: dateOfDeliveryController,
                                         hintText: 'Order Date',
                                         enable: false,
-                                        suffix: Icon(Icons.calendar_month_rounded, size: 20, color: Colors.black.withAlpha((255 * 0.5).toInt())),
+                                        suffix: Icon(
+                                          Icons.calendar_month_rounded,
+                                          size: 20,
+                                          color: Colors.black.withAlpha((255 * 0.5).toInt()),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -229,7 +273,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                         orderList.map((order) {
                                           int index = orderList.indexOf(order);
                                           return Container(
-                                            decoration: BoxDecoration(color: AppColors.orderCardBackground, borderRadius: BorderRadius.circular(15)),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.orderCardBackground,
+                                              borderRadius: BorderRadius.circular(15),
+                                            ),
                                             margin: EdgeInsets.only(bottom: 8),
                                             width: MediaQuery.sizeOf(context).width,
                                             padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -282,7 +329,13 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                 SizedBox(height: 12),
 
                                                 Container(
-                                                  decoration: BoxDecoration(border: Border.all(color: Colors.black.withAlpha((255 * 0.5).toInt()), width: 1), borderRadius: BorderRadius.circular(6)),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: Colors.black.withAlpha((255 * 0.5).toInt()),
+                                                      width: 1,
+                                                    ),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
                                                   padding: EdgeInsets.symmetric(horizontal: 12),
                                                   width: MediaQuery.sizeOf(context).width * 0.4,
                                                   height: 35,
@@ -295,9 +348,16 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                             GestureDetector(
                                                               behavior: HitTestBehavior.translucent,
                                                               onTap: () {
-                                                                if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
+                                                                if (order.quantityController.text.isNotEmpty &&
+                                                                    int.parse(order.quantityController.text) >
+                                                                        order.productModel.moq) {
                                                                   setQuantityState(() {
-                                                                    order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) - 1}'));
+                                                                    order = order.copyWith(
+                                                                      quantityController: TextEditingController(
+                                                                        text:
+                                                                            '${int.parse(order.quantityController.text) - 1}',
+                                                                      ),
+                                                                    );
                                                                     orderList[index] = order;
                                                                     // orderList = orderList.map((e) {
                                                                     //   if(e.productModel.id == order.productModel.id) {
@@ -316,7 +376,10 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                                 margin: EdgeInsets.symmetric(vertical: 5),
                                                                 height: 2,
                                                                 width: 8,
-                                                                decoration: BoxDecoration(color: Colors.black.withAlpha((255 * 0.5).toInt()), borderRadius: BorderRadius.circular(6)),
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors.black.withAlpha((255 * 0.5).toInt()),
+                                                                  borderRadius: BorderRadius.circular(6),
+                                                                ),
                                                               ),
                                                             ),
                                                             SizedBox(
@@ -330,11 +393,19 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                                 onChanged: (value) {
                                                                   setQuantityState(() {
                                                                     isError =
-                                                                        (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) <= order.productModel.moq) ||
+                                                                        (order.quantityController.text.isNotEmpty &&
+                                                                            int.parse(order.quantityController.text) <=
+                                                                                order.productModel.moq) ||
                                                                         order.quantityController.text.isEmpty;
 
-                                                                    if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
-                                                                      order = order.copyWith(quantityController: TextEditingController(text: order.quantityController.text));
+                                                                    if (order.quantityController.text.isNotEmpty &&
+                                                                        int.parse(order.quantityController.text) >
+                                                                            order.productModel.moq) {
+                                                                      order = order.copyWith(
+                                                                        quantityController: TextEditingController(
+                                                                          text: order.quantityController.text,
+                                                                        ),
+                                                                      );
                                                                       orderList[index] = order;
                                                                       // orderList = orderList.map((e) {
                                                                       //   if(e.productModel.id == order.productModel.id) {
@@ -349,24 +420,49 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                                 },
                                                                 textAlignVertical: TextAlignVertical.center,
                                                                 textInputAction: TextInputAction.done,
-                                                                style: GoogleFonts.rubik(fontWeight: FontWeight.normal, fontSize: 15, color: Colors.black),
-                                                                inputFormatters: <TextInputFormatter>[LengthLimitingTextInputFormatter(8), FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                                                                style: GoogleFonts.rubik(
+                                                                  fontWeight: FontWeight.normal,
+                                                                  fontSize: 15,
+                                                                  color: Colors.black,
+                                                                ),
+                                                                inputFormatters: <TextInputFormatter>[
+                                                                  LengthLimitingTextInputFormatter(8),
+                                                                  FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                                                                ],
                                                                 keyboardType: TextInputType.number,
                                                                 decoration: InputDecoration(
                                                                   constraints: BoxConstraints(maxWidth: 60, maxHeight: 30),
-                                                                  contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                                                                  contentPadding: EdgeInsets.symmetric(
+                                                                    vertical: 5,
+                                                                    horizontal: 10,
+                                                                  ),
                                                                   floatingLabelBehavior: FloatingLabelBehavior.auto,
                                                                   focusedBorder: OutlineInputBorder(
                                                                     borderRadius: BorderRadius.circular(20),
-                                                                    borderSide: BorderSide(color: Colors.transparent, width: 2),
+                                                                    borderSide: BorderSide(
+                                                                      color: Colors.transparent,
+                                                                      width: 2,
+                                                                    ),
                                                                   ),
                                                                   enabledBorder: OutlineInputBorder(
                                                                     borderRadius: BorderRadius.circular(20),
-                                                                    borderSide: BorderSide(color: Colors.transparent, width: 2),
+                                                                    borderSide: BorderSide(
+                                                                      color: Colors.transparent,
+                                                                      width: 2,
+                                                                    ),
                                                                   ),
-                                                                  disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                                                                  errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
-                                                                  focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
+                                                                  disabledBorder: OutlineInputBorder(
+                                                                    borderRadius: BorderRadius.circular(20),
+                                                                    borderSide: BorderSide.none,
+                                                                  ),
+                                                                  errorBorder: OutlineInputBorder(
+                                                                    borderRadius: BorderRadius.circular(20),
+                                                                    borderSide: BorderSide(color: Colors.red, width: 1),
+                                                                  ),
+                                                                  focusedErrorBorder: OutlineInputBorder(
+                                                                    borderRadius: BorderRadius.circular(20),
+                                                                    borderSide: BorderSide(color: Colors.red, width: 1),
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
@@ -374,7 +470,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                                               behavior: HitTestBehavior.translucent,
                                                               onTap: () {
                                                                 setQuantityState(() {
-                                                                  order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) + 1}'));
+                                                                  order = order.copyWith(
+                                                                    quantityController: TextEditingController(
+                                                                      text:
+                                                                          '${int.parse(order.quantityController.text) + 1}',
+                                                                    ),
+                                                                  );
                                                                   orderList[index] = order;
                                                                   // orderList = orderList.map((e) {
                                                                   //   if(e.productModel.id == order.productModel.id) {
@@ -403,7 +504,12 @@ class _AddEditOrderViewState extends State<AddEditOrderView> {
                                         }).toList(),
                                   ),
                                 )
-                                : Center(child: Text('No Data', style: TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w600))),
+                                : Center(
+                                  child: Text(
+                                    'No Data',
+                                    style: TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
                             SizedBox(height: 30),
                           ],
                         ),
@@ -436,12 +542,23 @@ class HorizontalTitleValueComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget valueWidget = Text(value.toString(), style: TextStyle(fontSize: valueFontSize ?? 12, color: Colors.black, fontWeight: valueFontWeight), maxLines: 5);
+    Widget valueWidget = Text(
+      value.toString(),
+      style: TextStyle(fontSize: valueFontSize ?? 14, color: Colors.black, fontWeight: valueFontWeight),
+      maxLines: 5,
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$title : ', style: TextStyle(fontSize: titleFontSize ?? 12, color: Colors.black.withAlpha((255 * 0.6).toInt()), fontWeight: titleFontWeight)),
+        Text(
+          '$title : ',
+          style: TextStyle(
+            fontSize: titleFontSize ?? 12,
+            color: Colors.black.withAlpha((255 * 0.6).toInt()),
+            fontWeight: titleFontWeight,
+          ),
+        ),
         isValueExpanded ? Expanded(child: valueWidget) : valueWidget,
       ],
     );
@@ -449,7 +566,13 @@ class HorizontalTitleValueComponent extends StatelessWidget {
 }
 
 class VerticalTitleValueComponent extends StatelessWidget {
-  const VerticalTitleValueComponent({super.key, required this.title, required this.value, this.isCenter = false, this.isEnd = false});
+  const VerticalTitleValueComponent({
+    super.key,
+    required this.title,
+    required this.value,
+    this.isCenter = false,
+    this.isEnd = false,
+  });
 
   final String title;
   final String value;
@@ -466,7 +589,10 @@ class VerticalTitleValueComponent extends StatelessWidget {
               : isCenter
               ? CrossAxisAlignment.center
               : CrossAxisAlignment.start,
-      children: [Text('$title : ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))), Text(value.toString(), style: TextStyle(fontSize: 12, color: Colors.black))],
+      children: [
+        Text(title, style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
+        Text(value.toString(), style: TextStyle(fontSize: 14, color: Colors.black)),
+      ],
     );
   }
 }

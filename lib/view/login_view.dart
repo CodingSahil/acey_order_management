@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:acey_order_management/controller/login_controller.dart';
 import 'package:acey_order_management/model/user_model.dart';
+import 'package:acey_order_management/utils/bottomsheet/sales_representative_login_bottomsheet.dart';
 import 'package:acey_order_management/utils/custom_snack_bar.dart';
+import 'package:acey_order_management/utils/enum.dart';
 import 'package:acey_order_management/utils/label_text_fields.dart';
 import 'package:acey_order_management/utils/loader.dart';
+import 'package:acey_order_management/utils/routes/routes.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
-import 'package:acey_order_management/view/dashboard_view.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -46,7 +48,11 @@ class _LoginViewState extends State<LoginView> {
       emailController.text.isNotEmpty &&
       EmailValidator.validate(emailController.text) &&
       passwordController.text.isNotEmpty &&
-      loginController.userList.any((element) => element.email.toLowerCase().trim() == emailController.text.toLowerCase().trim() && element.password.trim() == passwordController.text.trim());
+      loginController.userList.any(
+        (element) =>
+            element.email.toLowerCase().trim() == emailController.text.toLowerCase().trim() &&
+            element.password.trim() == passwordController.text.trim(),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +66,17 @@ class _LoginViewState extends State<LoginView> {
                   alignment: Alignment.center,
                   height: MediaQuery.sizeOf(context).height,
                   width: MediaQuery.sizeOf(context).width,
-                  padding: EdgeInsets.symmetric(vertical: MediaQuery.sizeOf(context).height * 0.04, horizontal: MediaQuery.sizeOf(context).width * 0.09),
+                  padding: EdgeInsets.symmetric(
+                    vertical: MediaQuery.sizeOf(context).height * 0.04,
+                    horizontal: MediaQuery.sizeOf(context).width * 0.09,
+                  ),
                   child: ListView(
                     children: [
                       SizedBox(height: MediaQuery.sizeOf(context).height * 0.175),
-                      Text('Login Here', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w800, fontSize: 30)),
+                      Text(
+                        'Login Here',
+                        style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w800, fontSize: 30),
+                      ),
                       SizedBox(height: 56),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,8 +87,14 @@ class _LoginViewState extends State<LoginView> {
                             hintText: 'Enter Email',
                             controller: emailController,
                             textInputType: TextInputType.emailAddress,
-                            isError: clickOnSave && (emailController.text.isEmpty || (emailController.text.isNotEmpty && !EmailValidator.validate(emailController.text))),
-                            errorMessage: (emailController.text.isNotEmpty && !EmailValidator.validate(emailController.text)) ? 'Email is Incorrect' : 'Email is require',
+                            isError:
+                                clickOnSave &&
+                                (emailController.text.isEmpty ||
+                                    (emailController.text.isNotEmpty && !EmailValidator.validate(emailController.text))),
+                            errorMessage:
+                                (emailController.text.isNotEmpty && !EmailValidator.validate(emailController.text))
+                                    ? 'Email is Incorrect'
+                                    : 'Email is require',
                             onChanged: (value) {
                               setState(() {});
                             },
@@ -127,12 +145,41 @@ class _LoginViewState extends State<LoginView> {
                           await Future.delayed(Duration(seconds: 1));
                           if (validateFields()) {
                             UserModel userModel = loginController.userList.firstWhere(
-                              (element) => element.email.toLowerCase().trim() == emailController.text.toLowerCase().trim() && element.password.trim() == passwordController.text.trim(),
+                              (element) =>
+                                  element.email.toLowerCase().trim() == emailController.text.toLowerCase().trim() &&
+                                  element.password.trim() == passwordController.text.trim(),
                             );
-                            await getStorage.write(StorageKeys.userDetails, jsonEncode(userModel.toJson()));
+
+                            if (userModel.userType == UserType.Zone &&
+                                userModel.zone != null &&
+                                loginController.salesRepresentativeList.isNotEmpty) {
+                              loginController.salesRepresentativeList =
+                                  loginController.salesRepresentativeList
+                                      .where((element) => element.zone == userModel.zone && !element.isResigned)
+                                      .toList();
+
+                              if (loginController.salesRepresentativeList.isNotEmpty) {
+                                await salesRepresentativeLoginBottomSheet(
+                                  context: context,
+                                  loginController: loginController,
+                                  onSubmit: (salesRepresentative) async {
+                                    await getStorage.write(StorageKeys.userDetails, jsonEncode(userModel.toJson()));
+                                    await getStorage.write(
+                                      StorageKeys.salesRepresentativeDetails,
+                                      jsonEncode(salesRepresentative.toJson()),
+                                    );
+                                  },
+                                );
+                              } else {
+                                errorSnackBar(context: context, title: "Add Sales Representative in this Zone");
+                              }
+                            } else {
+                              await getStorage.write(StorageKeys.userDetails, jsonEncode(userModel.toJson()));
+                              Get.offAllNamed(Routes.dashboardScreen);
+                            }
+
                             // var data = await getStorage.read(StorageKeys.userDetails);
                             // log(data, name: 'data => ');
-                            Get.offAll(() => DashboardView());
                             loginController.submitLoader(false);
                           } else {
                             errorSnackBar(context: context, title: "User doesn't Exist");
@@ -148,7 +195,10 @@ class _LoginViewState extends State<LoginView> {
                             () =>
                                 loginController.submitLoader.value
                                     ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
-                                    : Text('Sign In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                                    : Text(
+                                      'Sign In',
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+                                    ),
                           ),
                         ),
                       ),

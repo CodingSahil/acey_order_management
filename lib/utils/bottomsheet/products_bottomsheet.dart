@@ -5,8 +5,8 @@ import 'package:acey_order_management/main.dart';
 import 'package:acey_order_management/model/edit_order_navigation.dart';
 import 'package:acey_order_management/model/order_model.dart';
 import 'package:acey_order_management/utils/app_colors.dart';
+import 'package:acey_order_management/utils/routes/routes.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
-import 'package:acey_order_management/view/order_preview_after_add_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,7 +33,12 @@ Future<void> productBottomSheet({
     isDismissible: false,
     showDragHandle: true,
     scrollControlDisabledMaxHeightRatio: 0.96,
-    sheetAnimationStyle: AnimationStyle(curve: Curves.easeIn, duration: Duration(milliseconds: 600), reverseCurve: Curves.easeIn, reverseDuration: Duration(milliseconds: 400)),
+    sheetAnimationStyle: AnimationStyle(
+      curve: Curves.easeIn,
+      duration: Duration(milliseconds: 600),
+      reverseCurve: Curves.easeIn,
+      reverseDuration: Duration(milliseconds: 400),
+    ),
     builder:
         (context) => StatefulBuilder(
           builder:
@@ -58,12 +63,20 @@ Future<void> productBottomSheet({
                                           (e) => OrderModel(
                                             productModel: e,
                                             quantityController: TextEditingController(
-                                              text: selectedOrderListLocal.firstWhereOrNull((element) => element.productModel.id == e.id)?.quantityController.text ?? '10',
+                                              text:
+                                                  selectedOrderListLocal
+                                                      .firstWhereOrNull((element) => element.productModel.id == e.id)
+                                                      ?.quantityController
+                                                      .text ??
+                                                  '10',
                                             ),
                                           ),
                                         )
                                         .toList())
-                                    .where((element) => element.productModel.aeplPartNumber.toLowerCase().contains(value.toLowerCase()))
+                                    .where(
+                                      (element) =>
+                                          element.productModel.aeplPartNumber.toLowerCase().contains(value.toLowerCase()),
+                                    )
                                     .toList();
 
                             // dashboardController.productList.where((element) => element.aeplPartNumber.toLowerCase().contains(value.toLowerCase())).toList();
@@ -111,7 +124,10 @@ Future<void> productBottomSheet({
                                           (context) => AlertDialog(
                                             alignment: Alignment.center,
                                             backgroundColor: Colors.white,
-                                            title: Text('Product Details', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                                            title: Text(
+                                              'Product Details',
+                                              style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                                            ),
                                             content: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               spacing: 15,
@@ -153,7 +169,12 @@ Future<void> productBottomSheet({
                                                 ),
                                               ],
                                             ),
-                                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: Colors.black)))],
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: Text('Cancel', style: TextStyle(color: Colors.black)),
+                                              ),
+                                            ],
                                           ),
                                     );
                                   },
@@ -161,17 +182,25 @@ Future<void> productBottomSheet({
                                   child: Container(
                                     padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                                     margin: EdgeInsets.only(bottom: 6),
-                                    decoration: BoxDecoration(color: AppColors.primaryColor, borderRadius: BorderRadius.circular(15.r)),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryColor,
+                                      borderRadius: BorderRadius.circular(15.r),
+                                    ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(e.productModel.aeplPartNumber, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                                        Text(
+                                          e.productModel.aeplPartNumber,
+                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
+                                        ),
                                         SizedBox(width: 8),
                                         GestureDetector(
                                           behavior: HitTestBehavior.translucent,
                                           onTap: () {
                                             setBottomSheetState(() {
-                                              selectedOrderListLocal.removeWhere((element) => element.productModel.id == e.productModel.id);
+                                              selectedOrderListLocal.removeWhere(
+                                                (element) => element.productModel.id == e.productModel.id,
+                                              );
                                             });
                                           },
                                           child: Icon(Icons.cancel, color: Colors.white, size: 16),
@@ -186,8 +215,13 @@ Future<void> productBottomSheet({
                     ),
                   ],
                   SizedBox(height: 10),
-                  if ((searchController.text.isNotEmpty && searchedOrderList.isEmpty) || dashboardController.productList.isEmpty)
-                    Expanded(child: Center(child: Text('No Data', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black))))
+                  if ((searchController.text.isNotEmpty && searchedOrderList.isEmpty) ||
+                      dashboardController.productList.isEmpty)
+                    Expanded(
+                      child: Center(
+                        child: Text('No Data', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
+                      ),
+                    )
                   else
                     Expanded(
                       child: ListView(
@@ -199,7 +233,12 @@ Future<void> productBottomSheet({
                                           (e) => OrderModel(
                                             productModel: e,
                                             quantityController: TextEditingController(
-                                              text: selectedOrderListLocal.firstWhereOrNull((element) => element.productModel.id == e.id)?.quantityController.text ?? '10',
+                                              text:
+                                                  selectedOrderListLocal
+                                                      .firstWhereOrNull((element) => element.productModel.id == e.id)
+                                                      ?.quantityController
+                                                      .text ??
+                                                  '10',
                                             ),
                                           ),
                                         )
@@ -210,8 +249,12 @@ Future<void> productBottomSheet({
                                     behavior: HitTestBehavior.translucent,
                                     onTap: () {
                                       setBottomSheetState(() {
-                                        if (selectedOrderListLocal.any((element) => element.productModel.id == order.productModel.id)) {
-                                          selectedOrderListLocal.removeWhere((element) => element.productModel.id == order.productModel.id);
+                                        if (selectedOrderListLocal.any(
+                                          (element) => element.productModel.id == order.productModel.id,
+                                        )) {
+                                          selectedOrderListLocal.removeWhere(
+                                            (element) => element.productModel.id == order.productModel.id,
+                                          );
                                         } else {
                                           selectedOrderListLocal.add(order);
                                         }
@@ -224,7 +267,10 @@ Future<void> productBottomSheet({
                                             (context) => AlertDialog(
                                               alignment: Alignment.center,
                                               backgroundColor: Colors.white,
-                                              title: Text('Product Details', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                                              title: Text(
+                                                'Product Details',
+                                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                                              ),
                                               content: Column(
                                                 mainAxisSize: MainAxisSize.min,
                                                 spacing: 15,
@@ -266,7 +312,12 @@ Future<void> productBottomSheet({
                                                   ),
                                                 ],
                                               ),
-                                              actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: TextStyle(color: Colors.black)))],
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  child: Text('Cancel', style: TextStyle(color: Colors.black)),
+                                                ),
+                                              ],
                                             ),
                                       );
                                     },
@@ -275,7 +326,9 @@ Future<void> productBottomSheet({
                                         color: Colors.white,
                                         border: Border.all(
                                           color:
-                                              selectedOrderListLocal.any((element) => element.productModel.id == order.productModel.id)
+                                              selectedOrderListLocal.any(
+                                                    (element) => element.productModel.id == order.productModel.id,
+                                                  )
                                                   ? Colors.blueAccent
                                                   : Colors.black.withAlpha((255 * 0.2).toInt()),
                                           width: 1,
@@ -294,31 +347,72 @@ Future<void> productBottomSheet({
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   children: [
-                                                    Text('Series Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                    Text(order.productModel.srNumber, style: TextStyle(fontSize: 12, color: Colors.black)),
+                                                    Text(
+                                                      'Series Number :- ',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.black.withAlpha((255 * 0.6).toInt()),
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      order.productModel.srNumber,
+                                                      style: TextStyle(fontSize: 12, color: Colors.black),
+                                                    ),
                                                   ],
                                                 ),
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Text('AEPL Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                    Expanded(child: Text(order.productModel.aeplPartNumber, maxLines: 4, style: TextStyle(fontSize: 12, color: Colors.black))),
+                                                    Text(
+                                                      'AEPL Part Number :- ',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.black.withAlpha((255 * 0.6).toInt()),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Text(
+                                                        order.productModel.aeplPartNumber,
+                                                        maxLines: 4,
+                                                        style: TextStyle(fontSize: 12, color: Colors.black),
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Text('Reference Part Number :- ', style: TextStyle(fontSize: 12, color: Colors.black.withAlpha((255 * 0.6).toInt()))),
-                                                    Expanded(child: Text(order.productModel.referencePartNumber, maxLines: 4, style: TextStyle(fontSize: 12, color: Colors.black))),
+                                                    Text(
+                                                      'Reference Part Number :- ',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.black.withAlpha((255 * 0.6).toInt()),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Text(
+                                                        order.productModel.referencePartNumber,
+                                                        maxLines: 4,
+                                                        style: TextStyle(fontSize: 12, color: Colors.black),
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
 
                                                 ///
-                                                if (selectedOrderListLocal.any((element) => element.productModel.id == order.productModel.id))
+                                                if (selectedOrderListLocal.any(
+                                                  (element) => element.productModel.id == order.productModel.id,
+                                                ))
                                                   Container(
-                                                    decoration: BoxDecoration(border: Border.all(color: Colors.black.withAlpha((255 * 0.5).toInt()), width: 1), borderRadius: BorderRadius.circular(6)),
+                                                    decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                        color: Colors.black.withAlpha((255 * 0.5).toInt()),
+                                                        width: 1,
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
                                                     padding: EdgeInsets.symmetric(horizontal: 12),
                                                     margin: EdgeInsets.only(top: 12),
                                                     width: MediaQuery.sizeOf(context).width * 0.4,
@@ -330,9 +424,15 @@ Future<void> productBottomSheet({
                                                         GestureDetector(
                                                           behavior: HitTestBehavior.translucent,
                                                           onTap: () {
-                                                            if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
+                                                            if (order.quantityController.text.isNotEmpty &&
+                                                                int.parse(order.quantityController.text) >
+                                                                    order.productModel.moq) {
                                                               setBottomSheetState(() {
-                                                                order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) - 1}'));
+                                                                order = order.copyWith(
+                                                                  quantityController: TextEditingController(
+                                                                    text: '${int.parse(order.quantityController.text) - 1}',
+                                                                  ),
+                                                                );
                                                                 selectedOrderListLocal =
                                                                     selectedOrderListLocal.map((e) {
                                                                       if (e.productModel.id == order.productModel.id) {
@@ -351,7 +451,10 @@ Future<void> productBottomSheet({
                                                             margin: EdgeInsets.symmetric(vertical: 5),
                                                             height: 2,
                                                             width: 8,
-                                                            decoration: BoxDecoration(color: Colors.black.withAlpha((255 * 0.5).toInt()), borderRadius: BorderRadius.circular(6)),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.black.withAlpha((255 * 0.5).toInt()),
+                                                              borderRadius: BorderRadius.circular(6),
+                                                            ),
                                                           ),
                                                         ),
                                                         SizedBox(
@@ -365,11 +468,19 @@ Future<void> productBottomSheet({
                                                             onChanged: (value) {
                                                               setBottomSheetState(() {
                                                                 isError =
-                                                                    (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) <= order.productModel.moq) ||
+                                                                    (order.quantityController.text.isNotEmpty &&
+                                                                        int.parse(order.quantityController.text) <=
+                                                                            order.productModel.moq) ||
                                                                     order.quantityController.text.isEmpty;
 
-                                                                if (order.quantityController.text.isNotEmpty && int.parse(order.quantityController.text) > order.productModel.moq) {
-                                                                  order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text)}'));
+                                                                if (order.quantityController.text.isNotEmpty &&
+                                                                    int.parse(order.quantityController.text) >
+                                                                        order.productModel.moq) {
+                                                                  order = order.copyWith(
+                                                                    quantityController: TextEditingController(
+                                                                      text: '${int.parse(order.quantityController.text)}',
+                                                                    ),
+                                                                  );
                                                                   selectedOrderListLocal =
                                                                       selectedOrderListLocal.map((e) {
                                                                         if (e.productModel.id == order.productModel.id) {
@@ -384,18 +495,43 @@ Future<void> productBottomSheet({
                                                             },
                                                             textAlignVertical: TextAlignVertical.center,
                                                             textInputAction: TextInputAction.done,
-                                                            style: GoogleFonts.rubik(fontWeight: FontWeight.normal, fontSize: 15, color: Colors.black),
-                                                            inputFormatters: <TextInputFormatter>[LengthLimitingTextInputFormatter(8), FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                                                            style: GoogleFonts.rubik(
+                                                              fontWeight: FontWeight.normal,
+                                                              fontSize: 15,
+                                                              color: Colors.black,
+                                                            ),
+                                                            inputFormatters: <TextInputFormatter>[
+                                                              LengthLimitingTextInputFormatter(8),
+                                                              FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                                                            ],
                                                             keyboardType: TextInputType.number,
                                                             decoration: InputDecoration(
                                                               constraints: BoxConstraints(maxWidth: 60, maxHeight: 30),
-                                                              contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                                                              contentPadding: EdgeInsets.symmetric(
+                                                                vertical: 5,
+                                                                horizontal: 10,
+                                                              ),
                                                               floatingLabelBehavior: FloatingLabelBehavior.auto,
-                                                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.transparent, width: 2)),
-                                                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.transparent, width: 2)),
-                                                              disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                                                              errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
-                                                              focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide(color: Colors.red, width: 1)),
+                                                              focusedBorder: OutlineInputBorder(
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                borderSide: BorderSide(color: Colors.transparent, width: 2),
+                                                              ),
+                                                              enabledBorder: OutlineInputBorder(
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                borderSide: BorderSide(color: Colors.transparent, width: 2),
+                                                              ),
+                                                              disabledBorder: OutlineInputBorder(
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                borderSide: BorderSide.none,
+                                                              ),
+                                                              errorBorder: OutlineInputBorder(
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                borderSide: BorderSide(color: Colors.red, width: 1),
+                                                              ),
+                                                              focusedErrorBorder: OutlineInputBorder(
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                borderSide: BorderSide(color: Colors.red, width: 1),
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
@@ -404,7 +540,11 @@ Future<void> productBottomSheet({
                                                           onTap: () {
                                                             setBottomSheetState(() {
                                                               print(isError);
-                                                              order = order.copyWith(quantityController: TextEditingController(text: '${int.parse(order.quantityController.text) + 1}'));
+                                                              order = order.copyWith(
+                                                                quantityController: TextEditingController(
+                                                                  text: '${int.parse(order.quantityController.text) + 1}',
+                                                                ),
+                                                              );
                                                               selectedOrderListLocal =
                                                                   selectedOrderListLocal.map((e) {
                                                                     if (e.productModel.id == order.productModel.id) {
@@ -433,11 +573,19 @@ Future<void> productBottomSheet({
                                                 (context, setCheckBoxState) => Checkbox(
                                                   activeColor: Colors.blueAccent,
                                                   materialTapTargetSize: MaterialTapTargetSize.padded,
-                                                  value: selectedOrderListLocal.any((element) => element.productModel.aeplPartNumber == order.productModel.aeplPartNumber),
+                                                  value: selectedOrderListLocal.any(
+                                                    (element) =>
+                                                        element.productModel.aeplPartNumber ==
+                                                        order.productModel.aeplPartNumber,
+                                                  ),
                                                   onChanged: (value) {
                                                     setBottomSheetState(() {
-                                                      if (selectedOrderListLocal.any((element) => element.productModel.id == order.productModel.id)) {
-                                                        selectedOrderListLocal.removeWhere((element) => element.productModel.id == order.productModel.id);
+                                                      if (selectedOrderListLocal.any(
+                                                        (element) => element.productModel.id == order.productModel.id,
+                                                      )) {
+                                                        selectedOrderListLocal.removeWhere(
+                                                          (element) => element.productModel.id == order.productModel.id,
+                                                        );
                                                       } else {
                                                         selectedOrderListLocal.add(order);
                                                       }
@@ -470,7 +618,10 @@ Future<void> productBottomSheet({
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Continue', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14)),
+                            Text(
+                              'Continue',
+                              style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14),
+                            ),
                             SizedBox(width: 5),
                             Icon(Icons.arrow_forward, color: Colors.white, size: 15),
                           ],
@@ -592,7 +743,10 @@ Future<void> selectDiscountAndPackingType({
                         SizedBox(height: 8),
                         Container(
                           padding: EdgeInsets.symmetric(vertical: 2, horizontal: 16),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.black.withAlpha((255 * 0.25).toInt()), width: 0.5)),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: Colors.black.withAlpha((255 * 0.25).toInt()), width: 0.5),
+                          ),
                           child: DropdownButton<PackingType>(
                             value: selectedPackingType,
                             isExpanded: true,
@@ -601,7 +755,13 @@ Future<void> selectDiscountAndPackingType({
                             icon: Icon(Icons.keyboard_arrow_down_sharp, size: 20, color: Colors.black),
                             items:
                                 PackingType.values.map((PackingType type) {
-                                  return DropdownMenuItem<PackingType>(value: type, child: Text(packingTypeToString(type), style: TextStyle(color: Colors.black, fontSize: 14)));
+                                  return DropdownMenuItem<PackingType>(
+                                    value: type,
+                                    child: Text(
+                                      packingTypeToString(type),
+                                      style: TextStyle(color: Colors.black, fontSize: 14),
+                                    ),
+                                  );
                                 }).toList(),
 
                             onChanged: (PackingType? newValue) {
@@ -618,20 +778,19 @@ Future<void> selectDiscountAndPackingType({
                           behavior: HitTestBehavior.translucent,
                           onTap: () {
                             Get.back();
-                            Get.to(
-                              () => OrderPreviewAfterAddView(
-                                arguments:
-                                    editOrderNavigationModel.orderID != null
-                                        ? editOrderNavigationModel
-                                        : EditOrderNavigationModel(
-                                          partyName: editOrderNavigationModel.partyName,
-                                          dateOfDelivery: editOrderNavigationModel.dateOfDelivery,
-                                          orderList: editOrderNavigationModel.orderList,
-                                          packagingType: selectedPackingType,
-                                          discount: selectDiscount,
-                                          onAddEdit: editOrderNavigationModel.onAddEdit,
-                                        ),
-                              ),
+                            Get.toNamed(
+                              Routes.orderPreviewAfterAddEditScreen,
+                              arguments:
+                                  editOrderNavigationModel.orderID != null
+                                      ? editOrderNavigationModel
+                                      : EditOrderNavigationModel(
+                                        partyName: editOrderNavigationModel.partyName,
+                                        dateOfDelivery: editOrderNavigationModel.dateOfDelivery,
+                                        orderList: editOrderNavigationModel.orderList,
+                                        packagingType: selectedPackingType,
+                                        discount: selectDiscount,
+                                        onAddEdit: editOrderNavigationModel.onAddEdit,
+                                      ),
                             );
                           },
                           child: Container(
@@ -642,7 +801,10 @@ Future<void> selectDiscountAndPackingType({
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('Continue', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14)),
+                                Text(
+                                  'Continue',
+                                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14),
+                                ),
                                 SizedBox(width: 5),
                                 Icon(Icons.arrow_forward, color: Colors.white, size: 15),
                               ],

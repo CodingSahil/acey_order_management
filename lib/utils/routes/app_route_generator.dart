@@ -2,6 +2,7 @@ import 'package:acey_order_management/utils/routes/routes.dart';
 import 'package:acey_order_management/view/add_edit_order.dart';
 import 'package:acey_order_management/view/dashboard_view.dart';
 import 'package:acey_order_management/view/login_view.dart';
+import 'package:acey_order_management/view/order_details_view.dart';
 import 'package:acey_order_management/view/order_preview_after_add_view.dart';
 import 'package:acey_order_management/view/sales_representation_view.dart';
 import 'package:acey_order_management/view/splash_screen.dart';
@@ -26,6 +27,9 @@ Route<dynamic>? onGenerateRoute(RouteSettings settings) {
 
     case Routes.salesRepresentationView:
       return MaterialPageRoute(builder: (context) => SalesRepresentationView());
+
+    case Routes.orderDetailsView:
+      return MaterialPageRoute(builder: (context) => OrderDetailsView(arguments: settings.arguments));
 
     default:
       return MaterialPageRoute(builder: (context) => SplashScreenView());

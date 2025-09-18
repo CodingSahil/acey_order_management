@@ -5,4 +5,5 @@ class Routes {
   static const String addEditOrderScreen = 'addEditOrderScreen';
   static const String orderPreviewAfterAddEditScreen = 'orderPreviewAfterAddEditScreen';
   static const String salesRepresentationView = 'salesRepresentationView';
+  static const String orderDetailsView = 'orderDetailsView';
 }

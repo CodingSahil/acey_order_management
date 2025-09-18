@@ -4,11 +4,9 @@ import 'package:acey_order_management/utils/app_bar.dart';
 import 'package:acey_order_management/utils/app_colors.dart';
 import 'package:acey_order_management/utils/bottomsheet/add_edit_sales_representative_bottomsheet.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
-import 'package:acey_order_management/utils/image_path.dart';
 import 'package:acey_order_management/utils/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import 'add_edit_order.dart';

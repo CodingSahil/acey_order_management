@@ -10,9 +10,9 @@ import '../utils/bottomsheet/products_bottomsheet.dart';
 import 'add_edit_order.dart';
 
 class OrderDetailsView extends StatefulWidget {
-  const OrderDetailsView({super.key, required this.orderDetailsModel});
+  const OrderDetailsView({super.key, required this.arguments});
 
-  final OrderDetailsModel orderDetailsModel;
+  final dynamic arguments;
 
   @override
   State<OrderDetailsView> createState() => _OrderDetailsViewState();
@@ -25,27 +25,32 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
   num gstAmount = 0;
   num grandTotal = 0;
   List<OrderModel> orderModelList = [];
+  late OrderDetailsModel orderDetailsModel;
 
   @override
   void initState() {
-    deliveryDate = DateFormat('dd-MM-yyyy').format(widget.orderDetailsModel.deliveryDate);
-    if (widget.orderDetailsModel.orderDetails.isNotEmpty &&
-        widget.orderDetailsModel.orderDetails['orderDetails'] != null &&
-        widget.orderDetailsModel.orderDetails['orderDetails'] is List &&
-        (widget.orderDetailsModel.orderDetails['orderDetails'] as List).isNotEmpty) {
-      orderModelList = (widget.orderDetailsModel.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList();
+    if(widget.arguments is OrderDetailsModel){
+      orderDetailsModel = widget.arguments as OrderDetailsModel;
     }
-    if (widget.orderDetailsModel.totalQuantity != null) {
-      totalQuantity = widget.orderDetailsModel.totalQuantity!;
+
+    deliveryDate = DateFormat('dd-MM-yyyy').format(orderDetailsModel.deliveryDate);
+    if (orderDetailsModel.orderDetails.isNotEmpty &&
+        orderDetailsModel.orderDetails['orderDetails'] != null &&
+        orderDetailsModel.orderDetails['orderDetails'] is List &&
+        (orderDetailsModel.orderDetails['orderDetails'] as List).isNotEmpty) {
+      orderModelList = (orderDetailsModel.orderDetails['orderDetails'] as List).map((e) => OrderModel.fromJson(e as Map<String, dynamic>)).toList();
     }
-    if (widget.orderDetailsModel.totalPrice != null) {
-      totalPrice = widget.orderDetailsModel.totalPrice!;
+    if (orderDetailsModel.totalQuantity != null) {
+      totalQuantity = orderDetailsModel.totalQuantity!;
     }
-    if (widget.orderDetailsModel.gstAmount != null) {
-      gstAmount = widget.orderDetailsModel.gstAmount!;
+    if (orderDetailsModel.totalPrice != null) {
+      totalPrice = orderDetailsModel.totalPrice!;
     }
-    if (widget.orderDetailsModel.grandTotal != null) {
-      grandTotal = widget.orderDetailsModel.grandTotal!;
+    if (orderDetailsModel.gstAmount != null) {
+      gstAmount = orderDetailsModel.gstAmount!;
+    }
+    if (orderDetailsModel.grandTotal != null) {
+      grandTotal = orderDetailsModel.grandTotal!;
     }
     super.initState();
   }
@@ -54,7 +59,7 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: commonAppBar(title: "Order Details for #${widget.orderDetailsModel.id}"),
+      appBar: commonAppBar(title: "Order Details for #${orderDetailsModel.id}"),
       body: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +72,7 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
               children: [
                 HorizontalTitleValueComponent(
                   title: 'Party Name',
-                  value: widget.orderDetailsModel.partyName,
+                  value: orderDetailsModel.partyName,
                   titleFontSize: 15,
                   valueFontSize: 16,
                   valueFontWeight: FontWeight.w800,
@@ -78,7 +83,7 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
                 SizedBox(height: 6),
                 HorizontalTitleValueComponent(
                   title: 'Discount',
-                  value: '${widget.orderDetailsModel.discount}%',
+                  value: '${orderDetailsModel.discount}%',
                   titleFontSize: 15,
                   valueFontSize: 16,
                   valueFontWeight: FontWeight.w800,
@@ -87,7 +92,7 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
                 SizedBox(height: 6),
                 HorizontalTitleValueComponent(
                   title: 'Packaging Type',
-                  value: packingTypeToString(widget.orderDetailsModel.packagingType),
+                  value: packingTypeToString(orderDetailsModel.packagingType),
                   isValueExpanded: true,
                   titleFontSize: 13,
                   valueFontSize: 14,
@@ -118,7 +123,7 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
                     ],
                     rows:
                         orderModelList.map((order) {
-                          double price = order.productModel.mrp - ((order.productModel.mrp * widget.orderDetailsModel.discount) / 100);
+                          double price = order.productModel.mrp - ((order.productModel.mrp * orderDetailsModel.discount) / 100);
                           double totalPrice = price * (int.tryParse(order.quantityController.text) ?? 0);
                           log('price => $price & totalPrice => $totalPrice');
                           return DataRow(

@@ -1,12 +1,10 @@
 import 'dart:developer';
 import 'package:acey_order_management/utils/loader.dart';
+import 'package:acey_order_management/utils/routes/routes.dart';
 import 'package:acey_order_management/utils/storage_keys.dart';
-import 'package:acey_order_management/view/login_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-
-import 'dashboard_view.dart';
 
 class SplashScreenView extends StatefulWidget {
   const SplashScreenView({super.key});
@@ -33,9 +31,9 @@ class _SplashScreenViewState extends State<SplashScreenView> {
       await Future.delayed(Duration(seconds: 1));
       loader(false);
       if (data != null) {
-        Get.offAll(() => DashboardView());
+        Get.offAllNamed(Routes.dashboardScreen);
       } else {
-        Get.offAll(() => LoginView());
+        Get.offAllNamed(Routes.loginScreen);
       }
     });
     super.initState();
@@ -49,9 +47,16 @@ class _SplashScreenViewState extends State<SplashScreenView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Center(child: Text('ACEY Order Management App', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700))),
+            Center(
+              child: Text('ACEY Order Management App', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+            ),
             SizedBox(height: 10),
-            Obx(() => loader.value ? SizedBox(width: 12, height: 12, child: Loader(color: Colors.black, strokeWidth: 1)) : SizedBox.shrink()),
+            Obx(
+              () =>
+                  loader.value
+                      ? SizedBox(width: 12, height: 12, child: Loader(color: Colors.black, strokeWidth: 1))
+                      : SizedBox.shrink(),
+            ),
           ],
         ),
       ),

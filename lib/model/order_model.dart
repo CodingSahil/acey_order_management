@@ -24,6 +24,7 @@ class OrderDetailsModel extends Equatable {
     required this.remainingUpdate,
     required this.discount,
     required this.packagingType,
+    this.salesRepresentativeID,
   });
 
   final num id;
@@ -43,6 +44,7 @@ class OrderDetailsModel extends Equatable {
   final num? remainingUpdate;
   final num discount;
   final PackingType packagingType;
+  final num? salesRepresentativeID;
 
   factory OrderDetailsModel.fromJson(Map<String, dynamic> json) {
     return OrderDetailsModel(
@@ -51,13 +53,22 @@ class OrderDetailsModel extends Equatable {
           json['createdAt'] != null && json['createdAt'] is String && (json['createdAt'] as String).isNotEmpty
               ? DateFormatter.convertStringIntoTimeStamp(json['createdAt'] as String)
               : Timestamp.now(),
-      updatedAt: json['updatedAt'] != null && json['updatedAt'] is String && (json['updatedAt'] as String).isNotEmpty ? DateFormatter.convertStringIntoTimeStamp(json['updatedAt'] as String) : null,
-      deletedAt: json['deletedAt'] != null && json['deletedAt'] is String && (json['deletedAt'] as String).isNotEmpty ? DateFormatter.convertStringIntoTimeStamp(json['deletedAt'] as String) : null,
+      updatedAt:
+          json['updatedAt'] != null && json['updatedAt'] is String && (json['updatedAt'] as String).isNotEmpty
+              ? DateFormatter.convertStringIntoTimeStamp(json['updatedAt'] as String)
+              : null,
+      deletedAt:
+          json['deletedAt'] != null && json['deletedAt'] is String && (json['deletedAt'] as String).isNotEmpty
+              ? DateFormatter.convertStringIntoTimeStamp(json['deletedAt'] as String)
+              : null,
       userID: json['userID'] != null ? json['userID'] as num : -1000,
       orderDetails: json['orderDetails'] ?? {},
       excelSheetURL: json['excelSheetURL'] != null ? json['excelSheetURL'] as String : '',
       partyName: json['partyName'] != null ? json['partyName'] as String : '',
-      deliveryDate: json['deliveryDate'] != null ? DateFormatter.convertStringIntoDateTime(json['deliveryDate'] as String) : DateTime.now(),
+      deliveryDate:
+          json['deliveryDate'] != null
+              ? DateFormatter.convertStringIntoDateTime(json['deliveryDate'] as String)
+              : DateTime.now(),
       numberOfItems: json['numberOfItems'] != null ? json['numberOfItems'] as num : 0,
       totalQuantity: json['totalQuantity'] != null ? json['totalQuantity'] as num : 0,
       totalPrice: json['totalPrice'] != null ? json['totalPrice'] as num : 0,
@@ -66,6 +77,7 @@ class OrderDetailsModel extends Equatable {
       remainingUpdate: json['remainingUpdate'] != null ? json['remainingUpdate'] as num : 0,
       packagingType: convertStringToPackingType(json['packagingType'] as String),
       discount: json['discount'] as num,
+      salesRepresentativeID: json['salesRepresentativeID'] != null ? json['salesRepresentativeID'] as num : null,
     );
   }
 
@@ -87,6 +99,7 @@ class OrderDetailsModel extends Equatable {
     num? remainingUpdate,
     PackingType? packagingType,
     num? discount,
+    num? salesRepresentativeID,
   }) {
     return OrderDetailsModel(
       id: id ?? this.id,
@@ -106,6 +119,7 @@ class OrderDetailsModel extends Equatable {
       remainingUpdate: remainingUpdate ?? this.remainingUpdate,
       packagingType: packagingType ?? this.packagingType,
       discount: discount ?? this.discount,
+      salesRepresentativeID: salesRepresentativeID ?? this.salesRepresentativeID,
     );
   }
 
@@ -127,6 +141,7 @@ class OrderDetailsModel extends Equatable {
     if (remainingUpdate != null) 'remainingUpdate': remainingUpdate,
     'packagingType': convertPackingTypeToString(packagingType),
     if (discount != 0) 'discount': discount,
+    if (salesRepresentativeID != null) 'salesRepresentativeID': salesRepresentativeID,
   };
 
   @override
@@ -148,6 +163,7 @@ class OrderDetailsModel extends Equatable {
     remainingUpdate,
     packagingType,
     discount,
+    salesRepresentativeID,
   ];
 }
 
@@ -158,15 +174,24 @@ class OrderModel extends Equatable {
   const OrderModel({required this.productModel, required this.quantityController});
 
   OrderModel copyWith({ProductModel? productModel, TextEditingController? quantityController}) {
-    return OrderModel(productModel: productModel ?? this.productModel, quantityController: quantityController ?? this.quantityController);
+    return OrderModel(
+      productModel: productModel ?? this.productModel,
+      quantityController: quantityController ?? this.quantityController,
+    );
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
-    return OrderModel(productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>), quantityController: TextEditingController(text: (json['quantity']).toString()));
+    return OrderModel(
+      productModel: ProductModel.fromJson(json['productModel'] as Map<String, dynamic>),
+      quantityController: TextEditingController(text: (json['quantity']).toString()),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {'productModel': productModel.toJson(), if (quantityController.text.isNotEmpty) 'quantity': quantityController.text};
+    return {
+      'productModel': productModel.toJson(),
+      if (quantityController.text.isNotEmpty) 'quantity': quantityController.text,
+    };
   }
 
   @override

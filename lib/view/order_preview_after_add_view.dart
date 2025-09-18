@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:acey_order_management/controller/order_preview_after_add_controller.dart';
 import 'package:acey_order_management/model/edit_order_navigation.dart';
+import 'package:acey_order_management/model/sales_representative_model.dart';
 import 'package:acey_order_management/model/user_model.dart';
 import 'package:acey_order_management/utils/date_functions.dart';
 import 'package:acey_order_management/utils/label_text_fields.dart';
@@ -47,6 +48,7 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
   final String bucketName = 'order-excels-storage';
   EditOrderNavigationModel? editOrderNavigationModel;
   UserModel? userModel;
+  SalesRepresentativeModel? salesRepresentativeModel;
   int totalQuantity = 0;
   double totalPrice = 0;
   double gstAmount = 0;
@@ -65,7 +67,8 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
     log('OrderPreviewAfterAddView widget.editOrderNavigationModel != null ${editOrderNavigationModel != null}');
 
     if (editOrderNavigationModel != null && editOrderNavigationModel!.orderList.isNotEmpty) {
-      List<int> listOfQuantity = editOrderNavigationModel!.orderList.map((e) => int.parse(e.quantityController.text)).toList();
+      List<int> listOfQuantity =
+          editOrderNavigationModel!.orderList.map((e) => int.parse(e.quantityController.text)).toList();
       totalQuantity = listOfQuantity.reduce((value, element) => value + element);
 
       /// total price
@@ -87,9 +90,22 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
       userModel = UserModel.fromJson(jsonDecode(data) as Map<String, dynamic>);
       if (userModel != null) {
         log(jsonEncode(userModel!.toJson()), name: 'userModel => ');
+
+        if (userModel!.userType != UserType.SuperAdmin) {
+          var salesRepresentativeDetails = await getStorage.read(StorageKeys.salesRepresentativeDetails);
+          salesRepresentativeModel = SalesRepresentativeModel.fromJson(
+            jsonDecode(salesRepresentativeDetails) as Map<String, dynamic>,
+          );
+          if (salesRepresentativeModel != null) {
+            log(jsonEncode(salesRepresentativeModel!.toJson()), name: 'salesRepresentativeModel => ');
+          } else {
+            log('salesRepresentativeModel == null');
+          }
+        }
       } else {
         log('userModel == null');
       }
+
       await orderPreviewAfterAddController.getOrderList();
     });
 
@@ -113,10 +129,21 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
 
             sheet.getRangeByIndex(1, 1).setText('Client Name: ${editOrderNavigationModel!.partyName}');
             sheet.getRangeByIndex(2, 1).setText('Delivery Date: ${editOrderNavigationModel!.dateOfDelivery}');
-            sheet.getRangeByIndex(3, 1).setText('Packaging Details: ${convertPackingTypeToString(editOrderNavigationModel!.packagingType)}');
+            sheet
+                .getRangeByIndex(3, 1)
+                .setText('Packaging Details: ${convertPackingTypeToString(editOrderNavigationModel!.packagingType)}');
             sheet.getRangeByIndex(4, 1).setText('Discount Percentage: ${editOrderNavigationModel!.discount}');
 
-            final List<String> headers = ['Sr. No', 'Reference Part No.', 'AEPL Part No.', 'Description', 'MRP', 'Qty', 'Price', 'Total Price'];
+            final List<String> headers = [
+              'Sr. No',
+              'Reference Part No.',
+              'AEPL Part No.',
+              'Description',
+              'MRP',
+              'Qty',
+              'Price',
+              'Total Price',
+            ];
 
             for (int i = 0; i < headers.length; i++) {
               sheet.getRangeByIndex(5, i + 1).setText(headers[i]);
@@ -166,7 +193,10 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                   builder:
                       (context, setInnerState) => AlertDialog(
                         backgroundColor: Colors.white,
-                        title: Text('Enter Email ID', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
+                        title: Text(
+                          'Enter Email ID',
+                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 15),
+                        ),
                         content: LabeledTextFormField(
                           controller: emailController,
                           hintText: 'Enter Email ID',
@@ -193,7 +223,12 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                           TextButton(
                             child: Text('OK'),
                             onPressed: () async {
-                              setInnerState(() => isError = emailController.text.isEmpty || (emailController.text.isNotEmpty && !EmailValidator.validate(emailController.text)));
+                              setInnerState(
+                                () =>
+                                    isError =
+                                        emailController.text.isEmpty ||
+                                        (emailController.text.isNotEmpty && !EmailValidator.validate(emailController.text)),
+                              );
 
                               if (isError) {
                                 return;
@@ -220,7 +255,8 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                               Map<String, dynamic> data = {
                                 'to': emailController.text,
                                 'subject': "Test Email from cURL",
-                                'content': "This is a test email sent from a curl command using SendGrid + Supabase Edge Functions!\n\nYour Excel ID : $fileURL",
+                                'content':
+                                    "This is a test email sent from a curl command using SendGrid + Supabase Edge Functions!\n\nYour Excel ID : $fileURL",
                                 'filename': fileName,
                                 'attachmentBase64': base64File,
                               };
@@ -263,12 +299,16 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                                     editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null
                                         ? editOrderNavigationModel!.orderID!
                                         : orderPreviewAfterAddController.orderDetailsModelList.isNotEmpty
-                                        ? getNewID(orderPreviewAfterAddController.orderDetailsModelList.map((e) => e.id).toList())
+                                        ? getNewID(
+                                          orderPreviewAfterAddController.orderDetailsModelList.map((e) => e.id).toList(),
+                                        )
                                         : 1,
                                 userID: userModel != null && userModel!.id != -1000 ? userModel!.id : 1,
                                 createdAt: Timestamp.now(),
                                 updatedAt: Timestamp.now(),
-                                orderDetails: {'orderDetails': editOrderNavigationModel!.orderList.map((e) => e.toJson()).toList()},
+                                orderDetails: {
+                                  'orderDetails': editOrderNavigationModel!.orderList.map((e) => e.toJson()).toList(),
+                                },
                                 excelSheetURL: fileURL,
                                 partyName: editOrderNavigationModel!.partyName,
                                 deliveryDate: editOrderNavigationModel!.dateOfDelivery,
@@ -280,11 +320,19 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                                 remainingUpdate: remainingUpdate,
                                 discount: editOrderNavigationModel!.discount,
                                 packagingType: editOrderNavigationModel!.packagingType,
+                                salesRepresentativeID: salesRepresentativeModel?.id,
                               );
                               if (editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null) {
-                                await orderPreviewAfterAddController.updateOrder(request: orderDetailsModel.toJson(), context: context, id: editOrderNavigationModel!.orderID!);
+                                await orderPreviewAfterAddController.updateOrder(
+                                  request: orderDetailsModel.toJson(),
+                                  context: context,
+                                  id: editOrderNavigationModel!.orderID!,
+                                );
                               } else {
-                                await orderPreviewAfterAddController.createOrder(request: orderDetailsModel.toJson(), context: context);
+                                await orderPreviewAfterAddController.createOrder(
+                                  request: orderDetailsModel.toJson(),
+                                  context: context,
+                                );
                               }
                               await Future.delayed(Duration(seconds: 1));
                               await orderPreviewAfterAddController.getOrderList(isLoaderRequire: false);
@@ -316,7 +364,12 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
           label:
               loader.value
                   ? SizedBox(height: 24, width: 24, child: Center(child: Loader(color: Colors.white)))
-                  : Text(editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null ? 'Update Order' : 'Submit Order', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+                  : Text(
+                    editOrderNavigationModel != null && editOrderNavigationModel!.orderID != null
+                        ? 'Update Order'
+                        : 'Submit Order',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
           icon: loader.value ? SizedBox.shrink() : Icon(Icons.done, color: Colors.white),
         ),
       ),
@@ -376,7 +429,10 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        constraints: BoxConstraints(minHeight: MediaQuery.sizeOf(context).height * 0.75, minWidth: MediaQuery.sizeOf(context).width),
+                        constraints: BoxConstraints(
+                          minHeight: MediaQuery.sizeOf(context).height * 0.75,
+                          minWidth: MediaQuery.sizeOf(context).width,
+                        ),
                         child: SingleChildScrollView(
                           scrollDirection: Axis.vertical,
                           child: SingleChildScrollView(
@@ -394,7 +450,9 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                               ],
                               rows:
                                   editOrderNavigationModel!.orderList.map((order) {
-                                    double price = order.productModel.mrp - ((order.productModel.mrp * editOrderNavigationModel!.discount) / 100);
+                                    double price =
+                                        order.productModel.mrp -
+                                        ((order.productModel.mrp * editOrderNavigationModel!.discount) / 100);
                                     double totalPrice = price * (double.parse(order.quantityController.text));
                                     log('price => $price & totalPrice => $totalPrice');
                                     return DataRow(
@@ -415,7 +473,10 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                       ),
                     ),
                     SizedBox(height: 10.h),
-                    Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Divider(color: Colors.black.withAlpha((255 * 0.15).toInt()))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Divider(color: Colors.black.withAlpha((255 * 0.15).toInt())),
+                    ),
                     SizedBox(height: 10.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -428,7 +489,10 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                               columnWidth: FixedColumnWidth(MediaQuery.sizeOf(context).width * 0.48),
                             ),
                             DataColumn(
-                              label: Text(totalQuantity.toString(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                              label: Text(
+                                totalQuantity.toString(),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                              ),
                               columnWidth: FixedColumnWidth(MediaQuery.sizeOf(context).width * 0.48),
                             ),
                           ],
@@ -436,19 +500,34 @@ class _OrderPreviewAfterAddViewState extends State<OrderPreviewAfterAddView> {
                             DataRow(
                               cells: [
                                 DataCell(Text('Total Price', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400))),
-                                DataCell(Text(totalPrice.toStringAsFixed(2), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+                                DataCell(
+                                  Text(
+                                    totalPrice.toStringAsFixed(2),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
                               ],
                             ),
                             DataRow(
                               cells: [
                                 DataCell(Text('GST(28%)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400))),
-                                DataCell(Text(gstAmount.toStringAsFixed(2), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+                                DataCell(
+                                  Text(
+                                    gstAmount.toStringAsFixed(2),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
                               ],
                             ),
                             DataRow(
                               cells: [
                                 DataCell(Text('Grand Price', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400))),
-                                DataCell(Text(priceAfterGST.toStringAsFixed(2), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+                                DataCell(
+                                  Text(
+                                    priceAfterGST.toStringAsFixed(2),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
                               ],
                             ),
                           ],

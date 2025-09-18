@@ -14,7 +14,10 @@ class OrderPreviewAfterAddController extends GetxController {
 
   Future<void> getOrderList({bool isLoaderRequire = true}) async {
     if (isLoaderRequire) loader(true);
-    orderDetailsModelList = await SupabaseMethods.getFromList<OrderDetailsModel>(tableKey: SupabaseTableKeys.orderDetails, fromJson: OrderDetailsModel.fromJson);
+    orderDetailsModelList = await SupabaseMethods.getFromList<OrderDetailsModel>(
+      tableKey: SupabaseTableKeys.orderDetails,
+      fromJson: OrderDetailsModel.fromJson,
+    );
     log(orderDetailsModelList.map((e) => jsonEncode(e.toJson())).toList().toString(), name: 'orderDetailsModelList.map => ');
     if (isLoaderRequire) loader(false);
   }

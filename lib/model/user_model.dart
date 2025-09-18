@@ -16,6 +16,7 @@ class UserModel extends Equatable {
   final String? fcmToken;
   final bool isActiveCurrently;
   final DateTime? lastActiveTime;
+  final Zones? zone;
 
   const UserModel({
     required this.id,
@@ -30,6 +31,7 @@ class UserModel extends Equatable {
     this.fcmToken,
     this.isActiveCurrently = false,
     this.lastActiveTime,
+    this.zone,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -39,16 +41,47 @@ class UserModel extends Equatable {
           json['createdAt'] != null && json['createdAt'] is String && (json['createdAt'] as String).isNotEmpty
               ? DateFormatter.convertStringIntoTimeStamp(json['createdAt'] as String)
               : Timestamp.now(),
-      updatedAt: json['updatedAt'] != null && json['updatedAt'] is String && (json['updatedAt'] as String).isNotEmpty ? DateFormatter.convertStringIntoTimeStamp(json['updatedAt'] as String) : null,
-      deletedAt: json['deletedAt'] != null && json['deletedAt'] is String && (json['deletedAt'] as String).isNotEmpty ? DateFormatter.convertStringIntoTimeStamp(json['deletedAt'] as String) : null,
-      name: json['name'] != null && json['name'] is String && (json['name'] as String).isNotEmpty ? json['name'] as String : '',
-      email: json['email'] != null && json['email'] is String && (json['email'] as String).isNotEmpty ? json['email'] as String : '',
-      password: json['password'] != null && json['password'] is String && (json['password'] as String).isNotEmpty ? json['password'] as String : '',
-      mobileNumber: json['mobileNumber'] != null && json['mobileNumber'] is String && (json['mobileNumber'] as String).isNotEmpty ? json['mobileNumber'] as String : '',
-      userType: json['userType'] != null && json['userType'] is String && (json['userType'] as String).isNotEmpty ? convertStringToEnum(json['userType'] as String) : UserType.None,
-      fcmToken: json['fcmToken'] != null && json['fcmToken'] is String && (json['fcmToken'] as String).isNotEmpty ? json['fcmToken'] as String : null,
+      updatedAt:
+          json['updatedAt'] != null && json['updatedAt'] is String && (json['updatedAt'] as String).isNotEmpty
+              ? DateFormatter.convertStringIntoTimeStamp(json['updatedAt'] as String)
+              : null,
+      deletedAt:
+          json['deletedAt'] != null && json['deletedAt'] is String && (json['deletedAt'] as String).isNotEmpty
+              ? DateFormatter.convertStringIntoTimeStamp(json['deletedAt'] as String)
+              : null,
+      name:
+          json['name'] != null && json['name'] is String && (json['name'] as String).isNotEmpty
+              ? json['name'] as String
+              : '',
+      email:
+          json['email'] != null && json['email'] is String && (json['email'] as String).isNotEmpty
+              ? json['email'] as String
+              : '',
+      password:
+          json['password'] != null && json['password'] is String && (json['password'] as String).isNotEmpty
+              ? json['password'] as String
+              : '',
+      mobileNumber:
+          json['mobileNumber'] != null && json['mobileNumber'] is String && (json['mobileNumber'] as String).isNotEmpty
+              ? json['mobileNumber'] as String
+              : '',
+      userType:
+          json['userType'] != null && json['userType'] is String && (json['userType'] as String).isNotEmpty
+              ? convertStringToEnum(json['userType'] as String)
+              : UserType.None,
+      fcmToken:
+          json['fcmToken'] != null && json['fcmToken'] is String && (json['fcmToken'] as String).isNotEmpty
+              ? json['fcmToken'] as String
+              : null,
       isActiveCurrently: json['isActiveCurrently'] ?? false,
-      lastActiveTime: json['lastActiveTime'] != null ? DateFormatter.convertTimeStampIntoDateTime(json['lastActiveTime'] as String) : null,
+      lastActiveTime:
+          json['lastActiveTime'] != null
+              ? DateFormatter.convertTimeStampIntoDateTime(json['lastActiveTime'] as String)
+              : null,
+      zone:
+          json['zone'] != null && json['zone'] is String && (json['zone'] as String).isNotEmpty
+              ? convertStringToZones(json['zone'] as String)
+              : null,
     );
   }
 
@@ -65,6 +98,7 @@ class UserModel extends Equatable {
     if (fcmToken != null && fcmToken!.isNotEmpty) 'fcmToken': fcmToken,
     'isActiveCurrently': isActiveCurrently,
     if (lastActiveTime != null) 'lastActiveTime': lastActiveTime?.toIso8601String(),
+    if (zone != null) 'zone': convertZonesToString(zone!),
   };
 
   UserModel copyWith({
@@ -80,6 +114,7 @@ class UserModel extends Equatable {
     String? fcmToken,
     bool? isActiveCurrently,
     DateTime? lastActiveTime,
+    Zones? zone,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -94,9 +129,24 @@ class UserModel extends Equatable {
       fcmToken: fcmToken ?? this.fcmToken,
       isActiveCurrently: isActiveCurrently ?? this.isActiveCurrently,
       lastActiveTime: lastActiveTime ?? this.lastActiveTime,
+      zone: zone ?? this.zone,
     );
   }
 
   @override
-  List<Object?> get props => [id, createdAt, updatedAt, deletedAt, name, email, password, mobileNumber, userType, fcmToken, isActiveCurrently, lastActiveTime];
+  List<Object?> get props => [
+    id,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    name,
+    email,
+    password,
+    mobileNumber,
+    userType,
+    fcmToken,
+    isActiveCurrently,
+    lastActiveTime,
+    zone,
+  ];
 }
